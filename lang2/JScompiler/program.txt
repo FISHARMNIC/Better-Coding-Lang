@@ -1,0 +1,16 @@
+# "(int:1) 123" mallocs one block of data with the value of "123"
+# It then returns the address of that block
+# "*" gets the value of whats stored in that address
+# "jon: int" creates an integer pointer (integer variable)
+
+foo: int * (int:1) 123
+bob: int (int:5) 1|2|3|4|5
+jon: char (char:3) 'A'|'B'|'C'
+nico: char (char:?) "hello_world"
+
+printLn(%i,foo)
+printLn(%i,* bob)
+printLn(%i,bob[2])
+printLn(%c,jon[1])
+printLn(%s,nico)
+printLn(%s, (char:?) "testing123") 
