@@ -89,6 +89,8 @@ _macro_reserved_backup3: .long 0
 _macro_reserved_backup4: .long 0
 _macro_reserved_backup5: .long 0
 
+_function_return: .long 0
+
 _internalRegCpy: .long 0
 
 _strcmp_result: .byte 1 # 0 means true
@@ -325,7 +327,7 @@ put_int_loop_start:
     pusha
     mov %ecx, 0
     movw _lineNumber, \adr # print loc
-    lea %eax, \ms # dump start
+    mov %eax, \ms # dump start
     mov %ebx, \len # dump len
     call _memDump_lbl
     popa
@@ -344,7 +346,8 @@ put_int_loop_start:
 
 _memDump_lbl: 
     mov %eax, [%eax]
-    put_int %eax # dump char at address
+    mov _function_return, %eax
+    put_char _function_return # dump char at address
     put_char ' '
     inc %eax
     inc %ecx
@@ -439,3 +442,18 @@ _strcmp_not_equal:
     mov [%eax], %ebx # arr[address] += by
     popa
 .endm
+
+.macro strlen arr
+    push %esi
+    mov %esi, 0  # string offset register
+    mov %eax, \arr # move string address into eax
+    call _strlen
+    mov _function_return, %esi
+    pop %esi
+.endm
+
+_strlen:  
+    inc %esi # increment the string offset
+    cmpb [%eax + %esi], 0 # compare the character with \0
+    jne _strlen
+    ret

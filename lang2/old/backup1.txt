@@ -4,14 +4,9 @@
 # "jon: int" creates an integer pointer (integer variable)
 
 # Foo points to the value 123
-foo: (int) 123
+foo: (int) * (int:1) 123
 
-# You can also have a pointer to the variable, however it must be handled differently
-fooTwo: (int*) (int:1) 123
-
-# Lastly, you can point to a variable, but there isn't any need for this
-fooThree: (int) * (int:1) 123
-
+# You can also do: foo: (int) 123
 # Bob contains the base addres of our array (of 5 items)
 bob: (int*) (int:5) 1|2|3|4|5
 
@@ -19,7 +14,6 @@ bob: (int*) (int:5) 1|2|3|4|5
 jon: (char*) (char:3) 'A'|'B'|'C'
 
 # Nico is the base address of an string array
-# The question mark automatically designated the minimum space
 nico: (char*) (char:?) "hello_world"
 
 # The above is basically this:
@@ -27,23 +21,17 @@ nico2: (char*) (char:6) 'H'|'e'|'l'|'l'|'o'|0
 
 # Number printing:
 printLn(%i, foo)
-printLn(%i, * fooTwo)
 printLn(%i, 321)
 
-# Base/pointer indexing:
+# Array Indexing:
 printLn(%i, * bob)
 ++ bob
 printLn(%i, * bob)
 -- bob
-
-# Nomal indexing:
 printLn(%i, bob[2])
 
-# more examples of indexing:
+# String and char Indexing:
 printLn(%c, jon[1])
 printLn(%s, nico)
 printLn(%s, nico2)
-
-# (type:length) is used for compile-time memory allocation
-# as long as it's a constant value, it can also be used in-line
 printLn(%s, (char:?) "testing123")
