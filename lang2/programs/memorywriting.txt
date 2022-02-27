@@ -1,0 +1,9 @@
+# memory block start is at 1053004
+
+number: (int*) (int:3)
+
+1053004 = 100
+printLn(%i, * number)
+
+# vga vRAM starts at 0xB8000
+0xB8008 = 565

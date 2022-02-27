@@ -1,3 +1,5 @@
+// ADD MULTIPLE POINTER PER LINE SUPPORT
+
 const fs = require('fs')
 const { exec } = require("child_process");
 
@@ -84,32 +86,53 @@ var addBuffer = ""
 var endRepBind = [];
 
 var tbinding;
+var arrayIndexOGbase;
+
+/* #region  AUTOLABEL */
 
 var stringLabelCounter = 0
 function dynaLabel(increment = 0) {
     stringLabelCounter += increment;
-    return "L_bozo_" + (stringLabelCounter - increment)
+    return "_dyna_" + (stringLabelCounter - increment)
 }
 
 var stringLabelCounter2 = 0
 function whileLabel(increment = 0) {
     stringLabelCounter2 += increment;
-    return "ratio_" + (stringLabelCounter2 - increment)
+    return "_while_" + (stringLabelCounter2 - increment)
 }
 
 var stringLabelCounter3 = 0
 function ifLabel(increment = 0) {
     stringLabelCounter3 += increment;
-    return "rip_" + (stringLabelCounter3 - increment)
+    return "_notsure_" + (stringLabelCounter3 - increment)
 }
 
 var stringLabelCounter4 = 0
 function endifLabel(increment = 0) {
     stringLabelCounter4 += increment;
-    return "sad_" + (stringLabelCounter4 - increment)
+    return "_if_" + (stringLabelCounter4 - increment)
 }
+
+var stringLabelCounter5 = 0
+function SingleUseLabel(increment = 1) {
+    stringLabelCounter5 += increment;
+    return "_tempLabel_" + (stringLabelCounter5 - increment)
+}
+var ifTermVar = 0
+function ifTerm(am = 0) {
+    ret = `_ifEscape_${ifTermVar}`
+    ifTermVar += am
+    return ret
+}
+
+/* #endregion */
+
 var formattedFunctions = {
     allocate: function (typeSize, value) {
+        if (value == undefined) {
+            value = '0'
+        }
         typeSize = [typeSize.slice(0, typeSize.indexOf(":")), typeSize.slice(typeSize.indexOf(":") + 1)]
         var type = typeSize[0]
         var len = typeSize[1]
@@ -214,10 +237,11 @@ var formattedFunctions = {
             `popa\n`
         )
         lineContents[wordNumber] = `_tempReg`
+        arrayIndexOGbase = base + (index * typedefs[variables[base].type][0])
         //lineContents.splice(wordNumber + 1, 1)
         // NEED TO KNOW BLOCK SIZES
     },
-    printLn: function (type, value) {
+    print: function (type, value) {
         var pf = ""
         switch (type) {
             case "%s":
@@ -234,6 +258,11 @@ var formattedFunctions = {
         }
         main_kernel_data.push(
             pf + value,
+        )
+    },
+    printLn: function (type, value) {
+        this.print(type, value)
+        main_kernel_data.push(
             "new_line"
         )
     },
@@ -260,10 +289,8 @@ var formattedFunctions = {
         }
     },
     setVar: function (vari, value) {
-        console.log("cock", vari, value)
-        if(variables[vari].binding != undefined) {
-            vari = variables[vari].binding
-        }
+        console.log("cock", vari, value, addBuffer, variables)
+
         if (addBuffer) {
             main_kernel_data.push(
                 `push %eax`,
@@ -275,6 +302,13 @@ var formattedFunctions = {
             )
             addBuffer = false
         } else {
+            try {
+                if (variables[vari].binding) {
+                    vari = variables[vari].binding
+                }
+            } catch (e) {
+                vari = `[${vari}]`
+            }
             main_kernel_data.push(
                 `push %eax`,
                 `mov %eax, ${value}`,
@@ -300,87 +334,85 @@ var formattedFunctions = {
         //wordNumber += 1
         console.log("))))", lineContents)
     },
-    while: function(v, cmp, v2) {
+    // while: function (v, cmp, v2) {
+    //     main_kernel_data.push(
+    //         `${whileLabel}:`,
+    //         //`pushw ${}`
+    //     )
+    // },
+    // endWhile: function () {
+    //     main_kernel_data.push(
+    //         ``
+    //     )
+    // },
+    // forLoop: function (sec1_var, sec1_eqdummy, sec1_setTo, sec2_var, sec2_cmp, sec2_val, sec3) {
+    //     // WORK ON
+    // },
+    if: function (v, cmp, v2) {
         main_kernel_data.push(
-            `${whileLabel}:`,
-            //`pushw ${}`
+            `pusha`,
+            `mov %eax, ${v}`,
+            `mov %ebx, ${v2}`,
+            `cmp %eax, %ebx`,
+            `popa`,
+            `${compares[cmp]} ${endifLabel(1)}`, //1
+            `jmp ${endifLabel(-1)}`, // 0
+            `${endifLabel(1)}:`,//1
         )
     },
-    endWhile: function() {
+    elif: function (v, cmp, v2) {
         main_kernel_data.push(
-            ``
+            `jmp ${ifTerm()}`,
+            `${endifLabel(1)}:`,
         )
+        this.if(v, cmp, v2)
     },
-    forLoop: function(sec1_var, sec1_eqdummy, sec1_setTo, sec2_var, sec2_cmp, sec2_val, sec3) {
-    // WORK ON
-    },
-    if: function(v, cmp, v2) {
+    endif: function () {
         main_kernel_data.push(
-            `call ${ifLabel(0)}`,
-            `jmp ${endifLabel()}`,
-            `${ifLabel(1)}:`,
-            `cmp ${v}, ${v2}`,
-            `${compares[cmp]} ${ifLabel(1)}`,
-            `jmp ${ifLabel(-1)}`, 
-            `${ifLabel(1)}:`
-        )
-    },
-    elif: function(v, cmp, v2) {
-        main_kernel_data.push(
-            `ret`,
-            `${ifLabel(1)}:`,
-            `cmp ${v}, ${v2}`,
-            `${compares[cmp]} ${ifLabel(1)}`,
-            `jmp ${ifLabel(-1)}`, 
-            `${ifLabel(1)}:`
-        )
-    },
-    endif: function() {
-        main_kernel_data.push(
-            `ret`,
+            `${ifTerm(1)}:`,
             `${endifLabel(1)}:`
         )
     },
-    strlen: function(base) {
+    strlen: function (base) {
         main_kernel_data.push(
             `strlen ${base}`
         )
         lineContents[wordNumber] = "_function_return"
         lineContents.splice(wordNumber + 1, 1)
     },
-    repeat: function(vari, end, label) {
+    repeat: function (vari, end, label) {
         console.log("%%%", label)
-        if(label == undefined) {
+        if (label == undefined) {
             console.log("***", label)
-            endRepBind = [vari,end]
+            endRepBind = [vari, end]
             main_kernel_data.push(
                 `${whileLabel()}:`
             )
         } else {
             //main_kernel_data.push(`${label}:`)
-            endRepBind = [vari,end, label]
+            endRepBind = [vari, end, label]
         }
     },
-    "function": function(name) {
+    "function": function (name) {
         main_kernel_data.push(
             `${name}:`
         )
-        this[name] = function() {
+        this[name] = function () {
             main_kernel_data.push(`call ${name}`)
         }
     },
-    end: function(type) {
+    end: function (type) {
         console.log("chode")
         type += "."
-        var parsedType = type.slice(0,type.indexOf("."))
+        var parsedType = type.slice(0, type.indexOf("."))
         type = type.split("")
         type.pop()
         type = type.join("")
         var parsedType2 = type.slice(type.indexOf(".") + 1)
         console.log(":::", parsedType, ":", type)
-        switch (parsedType){
+        switch (parsedType) {
             case "@repeat":
-                if(!type.includes(".")) {
+                if (!type.includes(".")) {
                     console.log("bye")
                     main_kernel_data.push(
                         `pusha`,
@@ -388,7 +420,7 @@ var formattedFunctions = {
                         `mov %ebx, ${endRepBind[1]}`,
                         `cmp %eax, %ebx`,
                         `pushf`,
-                        `inc${opSuffix[variables[endRepBind[0]].type]} ${endRepBind[0]}`,
+                        // `inc${opSuffix[variables[endRepBind[0]].type]} ${endRepBind[0]}`,
                         `popf`,
                         `popa`,
                         `jl ${whileLabel(1)}`,
@@ -402,7 +434,7 @@ var formattedFunctions = {
                         `mov %ebx, ${endRepBind[1]}`,
                         `cmp %eax, %ebx`,
                         `pushf`,
-                        `inc${opSuffix[variables[endRepBind[0]].type]} ${endRepBind[0]}`,
+                        // `inc${opSuffix[variables[endRepBind[0]].type]} ${endRepBind[0]}`,
                         `popf`,
                         `popa`,
                         `jl ${parsedType2}`,
@@ -410,18 +442,37 @@ var formattedFunctions = {
                 }
                 break
             case "@function":
-            main_kernel_data.push(
+                main_kernel_data.push(
                     `ret`
                 )
                 break
         }
     },
-    goto: function(loc) {
+    goto: function (loc) {
         main_kernel_data.push(`jmp ${loc}`)
     },
-    mem_dump: function(a, m, l) {
+    mem_dump: function (a, m, l) {
         main_kernel_data.push(`_mem_dump_print ${a}, ${m}, ${l}`)
-    }
+    },
+    sleep: function (amount) {
+        amount = Math.round(amount * 2 * 67108863)
+        var label = SingleUseLabel()
+        main_kernel_data.push(
+            `push %eax`,
+            `mov %eax, ${amount}`,
+            `${label}:`,
+            `nop`,
+            `sub %eax, 1`,
+            `cmp %eax, 0`,
+            `jge ${label}`,
+            `pop %eax`
+        )
+    },
+    getKeyboardInput: function () {
+        main_kernel_data.push(`call read_keyboard`)
+        lineContents[wordNumber] = 'keyboard_out'
+    },
+
 
 }
 
@@ -508,7 +559,7 @@ var unformattedFunctions = {
                         var pArr = lineContents.slice(wordNumber + 1, wordNumber + 1 + formattedFunctions[wordContents].length)
                         //console.log("huevos", pArr)
                         formattedFunctions[wordContents](...pArr)
-                    } else if(Object.keys(unformattedFunctions).includes(wordContents)) {
+                    } else if (Object.keys(unformattedFunctions).includes(wordContents)) {
                         console.log("$$$", lineContents.slice(wordNumber + 1))
                         unformattedFunctions[wordContents](lineContents.slice(wordNumber + 1))
                     }

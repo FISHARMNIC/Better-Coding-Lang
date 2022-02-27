@@ -11,59 +11,10 @@ _tempBase: .long 0
 _tempPointer: .long 0
 
 .include "./data.s"
-foo: .long 0
-L_bozo_0: 
-.int 123
-fooTwo: .long 0
-L_bozo_1: 
-.int 123
-fooThree: .long 0
-L_bozo_2: 
-.int 1
-.int 2
-.int 3
-.int 4
-.int 5
-bob: .long 0
-L_bozo_3: 
-.byte 'A'
-.byte 'B'
-.byte 'C'
-jon: .long 0
-L_bozo_4: 
-.byte 'h'
-.byte 'e'
-.byte 'l'
-.byte 'l'
-.byte 'o'
-.byte '_'
-.byte 'w'
-.byte 'o'
-.byte 'r'
-.byte 'l'
-.byte 'd'
+_dyna_0: 
 .byte 0
-nico: .long 0
-L_bozo_5: 
-.byte 'H'
-.byte 'e'
-.byte 'l'
-.byte 'l'
-.byte 'o'
-.byte 0
-nico2: .long 0
-L_bozo_6: 
-.byte 't'
-.byte 'e'
-.byte 's'
-.byte 't'
-.byte 'i'
-.byte 'n'
-.byte 'g'
-.byte '1'
-.byte '2'
-.byte '3'
-.byte 0
+baseAddress: .long 0
+i: .long 0
 
 
 .section .text
@@ -77,124 +28,38 @@ kernel_entry:
     out %dx, %al
     popa
 
-
 push %ebx
-mov %ebx, 123
-mov foo, %ebx
-pop %ebx
-
-push %ebx
-lea %ebx, L_bozo_0
+lea %ebx, _dyna_0
 mov _tempPointer, %ebx
 pop %ebx
 
 push %ebx
 mov %ebx, _tempPointer
-mov fooTwo, %ebx
+mov baseAddress, %ebx
 pop %ebx
 
-push %ebx
-lea %ebx, L_bozo_1
-mov _tempPointer, %ebx
-pop %ebx
 push %eax
-mov %eax, _tempPointer
-mov %eax, [%eax]
-mov _tempReg, %eax
+mov %eax, 'H'
+mov [1054564], %eax
 pop %eax
 
 push %ebx
-mov %ebx, _tempReg
-mov fooThree, %ebx
+mov %ebx, 0
+mov i, %ebx
 pop %ebx
 
-push %ebx
-lea %ebx, L_bozo_2
-mov _tempPointer, %ebx
-pop %ebx
-
-push %ebx
-mov %ebx, _tempPointer
-mov bob, %ebx
-pop %ebx
-
-push %ebx
-lea %ebx, L_bozo_3
-mov _tempPointer, %ebx
-pop %ebx
-
-push %ebx
-mov %ebx, _tempPointer
-mov jon, %ebx
-pop %ebx
-
-push %ebx
-lea %ebx, L_bozo_4
-mov _tempPointer, %ebx
-pop %ebx
-
-push %ebx
-mov %ebx, _tempPointer
-mov nico, %ebx
-pop %ebx
-
-push %ebx
-lea %ebx, L_bozo_5
-mov _tempPointer, %ebx
-pop %ebx
-
-push %ebx
-mov %ebx, _tempPointer
-mov nico2, %ebx
-pop %ebx
-
-put_int foo
-new_line
+line:
 push %eax
-mov %eax, fooTwo
-mov %eax, [%eax]
-mov _tempReg, %eax
+mov %eax, 'N'
+mov [line], %eax
 pop %eax
-put_int _tempReg
-new_line
-put_int 321
-new_line
-push %eax
-mov %eax, bob
-mov %eax, [%eax]
-mov _tempReg, %eax
-pop %eax
-put_int _tempReg
-new_line
-addw bob, 4
-push %eax
-mov %eax, bob
-mov %eax, [%eax]
-mov _tempReg, %eax
-pop %eax
-put_int _tempReg
-new_line
-subw bob, 4
-
-pusha #TEST
-mov %eax, 4
-mov %ebx, 2
-mul %ebx
-mov %ebx, bob
-add %ebx, %eax
-mov _tempBase, %ebx
-mov %ebx, [%ebx]
-mov _tempReg, %ebx
-popa
-
-put_int _tempReg
-new_line
+_while_0:
 
 pusha #TEST
 mov %eax, 1
-mov %ebx, 1
+mov %ebx, i
 mul %ebx
-mov %ebx, jon
+mov %ebx, baseAddress
 add %ebx, %eax
 mov _tempBase, %ebx
 mov %ebx, [%ebx]
@@ -202,15 +67,13 @@ mov _tempReg, %ebx
 popa
 
 put_char _tempReg
-new_line
-put_string nico
-new_line
-put_string nico2
-new_line
-push %ebx
-lea %ebx, L_bozo_6
-mov _tempPointer, %ebx
-pop %ebx
-put_string _tempPointer
-new_line
+incw i
+pusha
+mov %eax, i
+mov %ebx, 2000
+cmp %eax, %ebx
+pushf
+popf
+popa
+jl _while_0
    ret

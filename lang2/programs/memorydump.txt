@@ -1,0 +1,7 @@
+baseAddress: (char*) (char:1)
+
+i: (int) 0
+repeat(i, 2000)
+    print(%c, baseAddress[i])
+    ++ i
+end @repeat

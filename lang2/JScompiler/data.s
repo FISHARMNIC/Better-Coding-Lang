@@ -1,5 +1,5 @@
-BLACK = 0 # vga color for black
-WHITE = 15 # vga color for white
+BLACK = 0 # vga color for black = 0
+WHITE = 15 # vga color for white = 15
 VGA_ADDR = = 0xB8000
 
 KEYBOARD_PORT = = 0x60
@@ -110,7 +110,7 @@ _vga_entry:
 
 .section .data
 
-keyboard_out: .byte 0
+keyboard_out: .long 0
 
 .macro set_var addr, value
     movw \addr, \value
