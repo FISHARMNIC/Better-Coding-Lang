@@ -42,8 +42,13 @@ var outConts = {
 _lineNumber: .long 0
 _mathResult: .long 0
 _mathFloat: .float 0
+
 _tempReg: .long 0
 _tempBase: .long 0
+
+_tempReg_2: .long 0
+_tempBase_2: .long 0 
+
 _tempPointer: .long 0
 
 .include "./data.s"
@@ -88,6 +93,7 @@ var endRepBind = [];
 var tbinding;
 var arrayIndexOGbase;
 
+var TempRegUsed = false
 /* #region  AUTOLABEL */
 
 var stringLabelCounter = 0
@@ -224,6 +230,15 @@ var formattedFunctions = {
     },
     arrayIndex: function (base, index) {
         console.log("aI")
+        var tr = "_tempReg"
+        var tb = "_tempBase"
+
+        if(TempRegUsed) {
+            tr = "_tempReg_2"
+            tb = "_tempBase_2"
+        } else {
+            TempRegUsed = true
+        }
         main_kernel_data.push(
             `\npusha #TEST`,
             `mov %eax, ${typedefs[variables[base].type][0]}`,
@@ -231,9 +246,9 @@ var formattedFunctions = {
             `mul %ebx`,
             `mov %ebx, ${base}`,
             `add %ebx, %eax`,
-            `mov _tempBase, %ebx`,
+            `mov ${tb}, %ebx`,
             `mov %ebx, [%ebx]`, // Remove to get base address
-            `mov _tempReg, %ebx`,
+            `mov ${tr}, %ebx`,
             `popa\n`
         )
         lineContents[wordNumber] = `_tempReg`
@@ -334,20 +349,6 @@ var formattedFunctions = {
         //wordNumber += 1
         console.log("))))", lineContents)
     },
-    // while: function (v, cmp, v2) {
-    //     main_kernel_data.push(
-    //         `${whileLabel}:`,
-    //         //`pushw ${}`
-    //     )
-    // },
-    // endWhile: function () {
-    //     main_kernel_data.push(
-    //         ``
-    //     )
-    // },
-    // forLoop: function (sec1_var, sec1_eqdummy, sec1_setTo, sec2_var, sec2_cmp, sec2_val, sec3) {
-    //     // WORK ON
-    // },
     if: function (v, cmp, v2) {
         main_kernel_data.push(
             `pusha`,
@@ -472,7 +473,18 @@ var formattedFunctions = {
         main_kernel_data.push(`call read_keyboard`)
         lineContents[wordNumber] = 'keyboard_out'
     },
-
+    arrcpy: function() {
+        main_kernel_data.push(
+            `push %eax`,
+            `push %ebx`,
+            `mov %eax, _tempBase_2`,
+            `mov %ebx, _tempReg`,
+            `mov [%eax], %ebx`,
+            `pop %ebx`,
+            `pop %eax`,
+        )
+    }
+    // END HERE !@#123 FIND SEARCH KEYWORD YUH
 
 }
 
@@ -532,6 +544,7 @@ var unformattedFunctions = {
         var code = String(fs.readFileSync(String(process.argv[2]))).split("\n")
         for (lineNumber = 0; lineNumber < code.length; lineNumber++) {
             lineContents = manipulateLine(code[lineNumber])
+            TempRegUsed = false 
 
             if (lineContents[0] == "for") {
                 formattedFunctions.forLoop(...lineContents.slice(1))

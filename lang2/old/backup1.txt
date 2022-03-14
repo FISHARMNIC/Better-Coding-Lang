@@ -1,37 +1,205 @@
-# "(int:1) 123" mallocs one block of data with the value of "123"
-# It then returns the address of that block
-# "*" gets the value of whats stored in that address
-# "jon: int" creates an integer pointer (integer variable)
+# MAX_LENGTH_(NOT_INCLUDING_THE_HEAD)
+snakeMaxLength: (int) 20
+snakeCurrentLength (int) 1 
 
-# Foo points to the value 123
-foo: (int) * (int:1) 123
+# KEEP_AT_3
+snakeRenderLength: (int) 3 
+temporary: (int) 0
 
-# You can also do: foo: (int) 123
-# Bob contains the base addres of our array (of 5 items)
-bob: (int*) (int:5) 1|2|3|4|5
+# FOOD_LOCATION
+foodRead: (int) 0
+foodPositionsX: (int*) (int:6) 10|5|20|40|65|75
+foodPositionsY: (int*) (int:6) 5|15|10|20|3|23
+foodX: (int) 10
+foodY: (int) 10
 
-# Jon is also the base address of another array (of 3 items)
-jon: (char*) (char:3) 'A'|'B'|'C'
+# EACH_CELL_CONTAINS_A_POSSIBLE_STATE_FOR_THAT_SECTION_OF_THE_SNAKE 
+# type int snakeXPositions = 40, newFilledArray(int, -1, $snakeMaxLength)
+# type int snakeYPositions = 12, newFilledArray(int, -1, $snakeMaxLength)
+snakeXPositions: (int*) (int:20)
+snakeYPositions: (int*) (int:20)
+snakeXPositions[0] = 40
+snakeYPositions[0] = 12
 
-# Nico is the base address of an string array
-nico: (char*) (char:?) "hello_world"
+# EACH_CELL_CONTAINS_HOW_LONG_THE_CELL_WILL_STAY_PRESENT_AT_THAT_SECTION
+# THE_FIRST_CELL/HEAD_WILL_ALWAYS_STAY_PRESENT
+snakeDuration: (int*) (int:20)
 
-# The above is basically this:
-nico2: (char*) (char:6) 'H'|'e'|'l'|'l'|'o'|0
+# X_MOVEMENT_:_Y_MOVEMENT
+snakeDirectionX: (int) 1
+snakeDirectionY: (int) 0
 
-# Number printing:
-printLn(%i, foo)
-printLn(%i, 321)
+# USED_FOR_LOOPING_THE_RENDER 
+cellAtIteration: (int) 0
+currentSnakeCellX: (int) 0
+currentSnakeCellY: (int) 0
 
-# Array Indexing:
-printLn(%i, * bob)
-++ bob
-printLn(%i, * bob)
--- bob
-printLn(%i, bob[2])
+# NUMBER_OF_FRAMES_RENDERED
+renderedFrames: (int) 0
+incrementIndex: (int) 0
 
-# String and char Indexing:
-printLn(%c, jon[1])
-printLn(%s, nico)
-printLn(%s, nico2)
-printLn(%s, (char:?) "testing123")
+# PRINT_INDIVIDUAL_PIXEL
+# HEREEE ADDD MACROSSS
+macro printAtPos(xP,yP) {
+    evaluate(yP x 80 + xP)
+    printAddr(%c, 219, _mathResult)
+}
+
+macro clearAtPos(xP,yP) {
+    evaluate(yP x 80 + xP)
+    printAddr(%c, 0, _mathResult)
+}
+
+macro printHeadAtPos(xP,yP) {
+    evaluate(yP x 80 + xP)
+    printAddr(%c, 002, _mathResult)
+}
+
+-------------------------------------------------------
+# MAIN_RENDER_LOOP
+repeat(renderedFrames, -1) 
+    continueFlow:
+    getKeyboardInput()
+
+    if (keyboard_out == KEY_UP)
+        snakeDirectionX = 0
+        snakeDirectionY = -1
+    elif (keyboard_out == KEY_DOWN)
+        snakeDirectionX = 0
+        snakeDirectionY = 1
+    elif (keyboard_out == KEY_LEFT)
+        snakeDirectionX = -1
+        snakeDirectionY = 0
+    elif (keyboard_out == KEY_RIGHT)
+        snakeDirectionX = 1
+        snakeDirectionY = 0
+    endif
+
+    renderAndStep()
+
+    # Wait 
+    sleep(0.2)
+end @repeat
+-------------------------------------------------------
+
+goto finish
+
+# RENDER_FUNCTION:_EACH_CELL_IS_CHECKED_AND_DRAWN_IF_PRESENT
+function renderAndStep {
+
+    # PRINT_FOOD
+    printAtPos(foodX, foodY) 
+
+    # EDIT_POSITION_OF_HEAD
+    addToArray(snakeXPositions[0], snakeDirectionX)
+    addToArray(snakeYPositions[0], snakeDirectionY)
+    printHeadAtPos(snakeXPositions[0], snakeYPositions[0])
+
+    # PRINT_EACH_CELL
+    setVar(cellAtIteration, 1)
+    while(cellAtIteration < $snakeMaxLength)
+        if(snakeXPositions[cellAtIteration] != -1)
+            intcpy(currentSnakeCellX, snakeXPositions[cellAtIteration])
+            intcpy(currentSnakeCellY, snakeYPositions[cellAtIteration])
+
+            # RENDER_CURRENT_CELL
+            printAtPos(currentSnakeCellX, currentSnakeCellY)
+        endif
+        ++ cellAtIteration
+    endWhile
+
+    # CLEAR_THE_OLD_POSITIONS
+    clearAtPos(snakeXPositions[snakeCurrentLength], snakeYPositions[snakeCurrentLength])
+
+    # MOVE_THE_BODY_PIECES
+    evaluate(snakeRenderLength - 1)
+    if(*snakeCurrentLength < *_mathResult)
+        
+        intcpy(snakeXPositions[snakeCurrentLength], snakeXPositions[0])
+        intcpy(snakeYPositions[snakeCurrentLength], snakeYPositions[0])
+        intcpy(snakeDuration[snakeCurrentLength], snakeCurrentLength)
+        ++ snakeCurrentLength
+    else 
+        intcpy(snakeXPositions[snakeCurrentLength],snakeXPositions[0])
+        intcpy(snakeYPositions[snakeCurrentLength],snakeYPositions[0])
+        setVar(snakeCurrentLength, 1)
+    endif
+
+    if(*foodRead > arrayLength(foodPositionsX)) 
+        setVar(foodRead,0)
+    endif
+    
+    extifDoubleVar(snakeXPositions[0] == *foodX && snakeYPositions[0] == *foodY)
+        ++ snakeRenderLength
+        intcpy(foodX, foodPositionsX[foodRead])
+        intcpy(foodY, foodPositionsY[foodRead])
+        ++ foodRead
+    endif
+
+    # IF_OUT_OF_BOUNDS
+    extif(*snakeXPositions > 79 || *snakeXPositions < 0)
+        call lose
+    endif
+    extif(*snakeYPositions > 25 || *snakeYPositions < 0)
+        call lose
+    endif
+
+    if(*snakeRenderLength >= $snakeMaxLength)
+        call win
+    endif
+
+    printAddr(%s, "Score", 0)
+    evaluate(snakeRenderLength - 2)
+    printAddr(%i, _mathResult, 80)
+}
+
+function lose {
+
+    call reset
+
+    printAddr(%s, "GAME OVER!", 993)
+    printAddr(%s, "PRESS ENTER TO PLAY AGAIN", 1065)
+
+    while(*renderedFrames > -1) 
+        getKeyboardInput()
+        if(*keyboard_out == KEY_ENTER)
+            clearScreen
+            jump continueFlow
+        endif
+    endWhile
+}
+
+function reset {
+    clearScreen
+
+    # RESET_TAIL
+    setVar(snakeCurrentLength, 0)
+    while(snakeCurrentLength < $snakeMaxLength)
+        setVar(snakeXPositions[snakeCurrentLength], -1)
+        setVar(snakeYPositions[snakeCurrentLength], -1)
+        ++ snakeCurrentLength
+    endWhile
+
+    # RESET_HEAD
+    setVar(snakeRenderLength, 3)
+    setVar(snakeXPositions[0],40)
+    setVar(snakeYPositions[0],12)
+}
+
+function win {
+    call reset
+
+    printAddr(%s, "!YOU  WIN!", 993)
+    printAddr(%s, "PRESS ENTER TO PLAY AGAIN", 1065)
+
+    while(*renderedFrames > -1) 
+        getKeyboardInput()
+        if(*keyboard_out == KEY_ENTER)
+            clearScreen
+            jump continueFlow
+        endif
+    endWhile
+}
+
+
+label finish
