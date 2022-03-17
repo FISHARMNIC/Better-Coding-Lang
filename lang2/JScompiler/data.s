@@ -94,6 +94,10 @@ _function_return: .long 0
 _internalRegCpy: .long 0
 
 _strcmp_result: .byte 1 # 0 means true
+
+_return_int: .int
+_return_char: .byte
+
 # IN USE : EBX, ECX
 # ECX : CHARACTER REGISTER
 # EBX : INDEX REGISTER
@@ -457,3 +461,4 @@ _strlen:
     cmpb [%eax + %esi], 0 # compare the character with \0
     jne _strlen
     ret
+    

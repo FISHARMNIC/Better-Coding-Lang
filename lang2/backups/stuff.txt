@@ -1,0 +1,15 @@
+M_param_size = 4
+malloc()
+printLn(%i, M_return)
+malloc()
+printLn(%i, M_return)
+
+
+print(%c,'N')
+        print(%i,M_position)
+        print(%c,':')
+        print(%i,malloc_start[M_position])
+        print(%c,':')
+        print(%i,malloc_end[M_position])
+        print(%c,':')
+        printLn(%i,AI_return)

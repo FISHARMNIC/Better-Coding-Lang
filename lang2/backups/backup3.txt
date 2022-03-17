@@ -16,21 +16,24 @@ malloc_index: (int) 1
 # Most recent free memory spot     
 malloc_free_spot: (int) 0    
 
-
+AI_param_value: (int)
 AI_return: (int)
 AI_i: (int)
 
 M_position: (int)
 M_free_bytes_read: (int) 0
 M_where_in_arr: (int)
+M_return: (int)
+M_param_size: (int)
 
+F_parameter_ptr: (int)
 F_baseAddress: (int)
 F_i: (int)
 F_endValue: (int)
 
 goto main
 # --------------------------- FUNCTIONS ---------------------------------------
-function array_includes void (int AI_param_value)
+function array_includes
     AI_i = 0
     AI_return = RETURN_FALSE
     repeat(AI_i, MAX_MEMORY)
@@ -42,11 +45,14 @@ function array_includes void (int AI_param_value)
     end @repeat
 end @function
 
-function malloc int (int M_param_size)
+function malloc int
     M_position = 0
+    M_return = 0
 
     repeat(M_position, MAX_MEMORY)
-        array_includes(M_position)
+    AI_param_value = M_position
+        array_includes()
+        # comment block here
 
         # if in a block
         if(AI_return != RETURN_FALSE)
@@ -58,7 +64,8 @@ function malloc int (int M_param_size)
             malloc_end[malloc_index] = M_position
             malloc_start[malloc_index] = evaluate(M_position - M_param_size + 1)
             ++ malloc_index
-            return evaluate(malloc_memory + M_position - M_param_size)
+            M_return = evaluate(malloc_memory + M_position - M_param_size)
+            return M_return
         endif
         ++ M_free_bytes_read
         ++ M_position
@@ -66,9 +73,10 @@ function malloc int (int M_param_size)
     ++ malloc_index
 end @function
 
-function free void (int F_parameter_ptr)
+function free
     F_baseAddress = evaluate(F_parameter_ptr - malloc_memory + 1)
-    array_includes(F_baseAddress)
+    AI_param_value = F_baseAddress
+    array_includes()
     F_i = malloc_start[AI_return]
     F_endValue = malloc_end[AI_return]
     repeat(F_i, F_endValue)
@@ -82,17 +90,23 @@ end @function
 # ----------------------------- MAIN --------------------------------------
 main:
 
-myNumber: (int*) malloc(4) 
+M_param_size = 4
+myNumber: (int*) malloc() 
 printLn(%i,myNumber)
 
-secondNumber: (int*) malloc(8)
-printLn(%i,secondNumber)
+M_param_size = 8
+secondNumber: (int*) malloc()
+printLn(%i,M_return)
 
-free(& myNumber)
+F_parameter_ptr = & myNumber
+free()
 
-printLn(%i,malloc(2))
+M_param_size = 2
+printLn(%i,malloc())
 
-printLn(%i,malloc(2))
+M_param_size = 2
+printLn(%i,malloc())
 
-printLn(%i,malloc(2))
+M_param_size = 2
+printLn(%i,malloc())
 

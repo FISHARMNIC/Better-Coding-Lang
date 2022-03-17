@@ -1,0 +1,7 @@
+baseAddress: (char*) VGA_ADDR
+i: (int) 0 
+
+repeat(i, 10)
+    baseAddress[i] = 123
+    ++ i
+end @repeat
