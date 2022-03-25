@@ -1,14 +1,14 @@
-#define MAX_MEMORY 20
-#define RETURN_FALSE 21
+#define MAX_MEMORY 100
+#define RETURN_FALSE 101
 
 # Let the compiler designate some static memory for us
-malloc_memory: (char*) (char:20)
+malloc_memory: (char*) (char:100)
 
 # Where our memory segments will start
-malloc_start: (int*) (int:20)
+malloc_start: (int*) (int:100)
 
 # Where out memory segments will end 
-malloc_end: (int*) (int:20)
+malloc_end: (int*) (int:100)
 
 # Where to write into the start/end  
 malloc_index: (int) 1
@@ -16,23 +16,11 @@ malloc_index: (int) 1
 # Most recent free memory spot     
 malloc_free_spot: (int) 0    
 
-
-AI_return: (int)
-AI_i: (int)
-
-M_position: (int)
-M_free_bytes_read: (int) 0
-M_where_in_arr: (int)
-
-F_baseAddress: (int)
-F_i: (int)
-F_endValue: (int)
-
 goto main
 # --------------------------- FUNCTIONS ---------------------------------------
 function array_includes void (int AI_param_value)
-    AI_i = 0
-    AI_return = RETURN_FALSE
+    AI_return: (int) RETURN_FALSE
+    AI_i: (int) 0
     repeat(AI_i, MAX_MEMORY)
         if(malloc_start[AI_i] == AI_param_value)
             AI_return = AI_i
@@ -43,7 +31,8 @@ function array_includes void (int AI_param_value)
 end @function
 
 function malloc int (int M_param_size)
-    M_position = 0
+    M_position: (int) 0
+    M_free_bytes_read: (int) 0
 
     repeat(M_position, MAX_MEMORY)
         array_includes(M_position)
@@ -67,10 +56,13 @@ function malloc int (int M_param_size)
 end @function
 
 function free void (int F_parameter_ptr)
-    F_baseAddress = evaluate(F_parameter_ptr - malloc_memory + 1)
+
+    F_baseAddress: (int) evaluate(F_parameter_ptr - malloc_memory + 1) 
     array_includes(F_baseAddress)
-    F_i = malloc_start[AI_return]
-    F_endValue = malloc_end[AI_return]
+
+    F_i: (int) malloc_start[AI_return]
+    F_endValue: (int) malloc_end[AI_return]
+
     repeat(F_i, F_endValue)
         malloc_memory[F_i] = 0
         ++ F_i
@@ -82,17 +74,19 @@ end @function
 # ----------------------------- MAIN --------------------------------------
 main:
 
-myNumber: (int*) malloc(4) 
-printLn(%i,myNumber)
+arr1: (int*) malloc(evaluate(4 x sizeof(int))
+arr2: (int*) malloc(evaluate(2 x sizeof(int)))
 
-secondNumber: (int*) malloc(8)
-printLn(%i,secondNumber)
+printLn(%i, arr1)
+printLn(%i, arr2)
 
-free(& myNumber)
+free(arr1)
 
-printLn(%i,malloc(2))
+printLn(%s, (char:?) "---Freed_arr1---")
 
-printLn(%i,malloc(2))
+# The two arrays of size 2 can fit in the empty space of 4 created by the freed pointer
+arr3: (int*) malloc(evaluate(2 x sizeof(int))
+arr4: (int*) malloc(evaluate(2 x sizeof(int))
 
-printLn(%i,malloc(2))
-
+printLn(%i, arr3)
+printLn(%i, arr4)

@@ -1,0 +1,24 @@
+board: (int*) (int:9)
+
+goto main
+# -------------------- FUNCTIONS --------------
+function render
+    render_i_outer: (int) 0
+    render_i_inner: (int) 0
+
+    repeat(render_i_outer, 3) (render_outerLoop:)
+        render_i_inner = 0
+        repeat(render_i_inner, 3) (render_innerLoop:)
+            print(%i, 1)
+            ++ render_i_inner
+        end @repeat.render_innerLoop
+        printNL()
+        ++ render_i_outer
+    end @repeat.render_outerLoop
+end @function
+
+
+# ------------------- CODE ------------
+main:
+
+render()

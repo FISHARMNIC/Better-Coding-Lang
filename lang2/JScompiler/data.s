@@ -240,7 +240,7 @@ _clearVGA:
         jne _clearVGA_loopStart
     pop %ebx
     pop %eax
-    movb _lineNumber, 0
+    movw _lineNumber, 0
 ret
 
 

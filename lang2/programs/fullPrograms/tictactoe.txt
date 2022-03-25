@@ -1,0 +1,88 @@
+# NOT DONE
+# ADD ININLE EVAL: board[evaluate(1+2)]
+
+# ------------------------------ DATA ------------------------------------------
+board: (int*) (int:9)
+
+goto main
+# --------------------------- FUNCTIONS --------------------------
+function render
+    render_i_outer: (int) 0
+    render_i_inner: (int) 0
+    render_calculation: (int) 0
+    
+    repeat(render_i_outer, 3) (render_outerLoop:)
+        render_i_inner = 0
+        repeat(render_i_inner, 3) (render_innerLoop:)
+            render_calculation = evaluate(render_i_outer x 3 + render_i_inner)
+            print(%c, board[render_calculation])
+            print(%c, '|')
+            ++ render_i_inner
+        end @repeat.render_innerLoop
+        printNL()
+        printLn(%s, (char:?) "------")
+        ++ render_i_outer
+    end @repeat.render_outerLoop
+end @function
+
+function awaitKB int 
+    AKB_i: (int) 0
+    repeat(AKB_i,1)
+        getKeyboardInput()
+        if(keyboard_out <= 77)
+            return keyboard_out
+        endif
+    end @repeat
+end @function
+
+function awaitKBup
+    repeat(AKB_i,1)
+        getKeyboardInput()
+        if(keyboard_out > 77)
+            return keyboard_out
+        endif
+    end @repeat
+end @function
+# --------------------------- CODE -----------------------------------
+main:
+
+input_x: (int)
+input_y: (int)
+
+alternate: (char) 0
+current_player: (char)
+temp: (int) 0
+
+i: (int) 0
+repeat(i, 1)
+    clearVGA()
+   
+    render()
+    printLn(%c, board[1])
+
+    awaitKB()
+    input_x = evaluate(keyboard_out - 1)
+    awaitKBup()
+
+    awaitKB()
+    input_y = evaluate(keyboard_out - 1)
+
+    print(%s, (char:?) "selected;_")
+    print(%i, input_x)
+    print(%c, ':')
+    print(%i, input_y)
+
+    if(alternate == 0)
+        current_player = 'O'
+        alternate = 1
+    else
+        current_player = 'X'
+        alternate = 0
+    endif
+
+
+    temp = evaluate(input_y x 3 + input_x)
+    board[temp] = current_player
+
+    sleep(2)
+end @repeat
