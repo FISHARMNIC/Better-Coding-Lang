@@ -32,12 +32,43 @@ requires:
 		* `jon` is an array of 5
 	* `foo: (char*) (char:?) "hello"`
 		* `foo` is a string holding the address of `h`
+		* Strings automatically contain the null character
 	* `bob: (int) 123`
 		* `bob` holds the value `123`
 
 ## Stdio
 * The library for stdio must be imported like so
 	* `#include libs/stdio.s`
-* The print function is rather simple
-	* `print(%type, value)`
-	* `printLn(%type, value)`
+* standard out
+	* The print function is rather simple
+		* `print(%type, value)`
+		* `printLn(%type, value)`
+	* Examples:
+		* `print(%i, 123)`
+		* `print(%c, 'A')`
+		* `print(%s, foo)`
+		* `print(%s, (char:?) "yo")`
+* standard in
+	* Getting the most recent KP
+		* `getKeyboardInput()`
+	* reading that value
+		* `if(keyboard_out == KEY_A)`
+
+## Control Flow
+* loops
+	* `repeat(variable, end)` ... `end @repeat`
+		* Translates to `for(; variable < end;;) {...}`
+* if/elif/endif
+	* `if(a comp b)`
+	* `elif( a comp b)`
+	* `endif()`
+
+## Functions
+* `function <name> <return type> (<parameter type> <parameter name>...)`
+	* you can also return `void` if you wish
+* `return <value>`
+* `end @function`
+* FUNCTION ARE AUTOEXECUTED
+	* To avoid this add a `goto main` before your functions
+	* And then add a `main:` after your functions
+
