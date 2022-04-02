@@ -72,3 +72,19 @@ requires:
 	* To avoid this add a `goto main` before your functions
 	* And then add a `main:` after your functions
 
+## Pointers
+* `++* <var>` 
+	* Inc. value in pointer
+* `*`
+	* Calls pointer
+* `&`
+	* base address of a variable
+* `<var>[<addr>]
+	* index
+
+## Math
+* All statements to be evaluates must be
+	* surrounded in `{...}`
+	* or `evaluate(...)`
+* Supports: `+,-,x,/,>>,<<,|`
+	* Note, the times symbol must be an `x`
