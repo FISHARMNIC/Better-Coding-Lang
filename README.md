@@ -11,3 +11,33 @@ requires:
 2. Xorriso
 3. GNU bintutils
 4. Qemu
+
+---
+# Documentation:  
+#### This language is rather similar to `C`. It features pointers, arrays, math, stdio, and more!
+
+## Variables
+* Variables are defined with labels like so: `name:`   
+* After defining a variable, give it a type: `(type)`  
+	* For now, you can use `int` or `char`
+	* `Int` is a 32 bit number
+* Give it a value (optional): `123`
+* If you want to assign it to a string or array, allocate memory for it
+	* This is done like so: `(type:size)`
+		* Lengths can be auto-assigned with a `?`
+	* It's value is then defined after it
+	* Arrays are split by `|`
+* Examples:
+	* `jon: (int*) (int:5) 1|2|3|4|5`
+		* `jon` is an array of 5
+	* `foo: (char*) (char:?) "hello"`
+		* `foo` is a string holding the address of `h`
+	* `bob: (int) 123`
+		* `bob` holds the value `123`
+
+## Stdio
+* The library for stdio must be imported like so
+	* `#include libs/stdio.s`
+* The print function is rather simple
+	* `print(%type, value)`
+	* `printLn(%type, value)`
