@@ -11,6 +11,8 @@ requires:
 2. Xorriso
 3. GNU bintutils
 4. Qemu
+--- 
+See [here](https://github.com/FISHARMNIC/Better-Coding-Lang/tree/main/lang2/programs) for quick Ex.
 
 ---
 # Documentation:  
@@ -88,3 +90,4 @@ requires:
 	* or `evaluate(...)`
 * Supports: `+,-,x,/,>>,<<,|`
 	* Note, the times symbol must be an `x`
+
