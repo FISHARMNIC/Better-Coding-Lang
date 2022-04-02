@@ -79,7 +79,7 @@ requires:
 	* Calls pointer
 * `&`
 	* base address of a variable
-* `<var>[<addr>]
+* `<var>[<addr>]`
 	* index
 
 ## Math
