@@ -1,3 +1,5 @@
+#include libs/stdio.s
+
 printLn(%s, (char:?) "press_A")
 
 i: (int) 0

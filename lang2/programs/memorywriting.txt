@@ -1,3 +1,5 @@
+#include libs/stdio.s
+
 # memory block start is at 1053004
 
 number: (int*) (int:3)

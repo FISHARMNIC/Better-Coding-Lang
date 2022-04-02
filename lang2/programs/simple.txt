@@ -1,3 +1,5 @@
+#include libs/stdio.s
+
 # "(int:1) 123" mallocs one block of data with the value of "123"
 # It then returns the address of that block
 # "*" gets the value of whats stored in that address

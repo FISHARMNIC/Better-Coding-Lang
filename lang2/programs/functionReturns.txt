@@ -1,3 +1,5 @@
+#include libs/stdio.s
+
 jon: (int) 123
 
 goto main

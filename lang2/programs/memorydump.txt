@@ -1,3 +1,5 @@
+#include libs/stdio.s
+
 baseAddress: (char*) (char:1)
 
 i: (int) 0

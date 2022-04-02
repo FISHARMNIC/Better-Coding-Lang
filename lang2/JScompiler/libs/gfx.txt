@@ -1,0 +1,3 @@
+function test 
+    printLn(%c, 'T')
+end @function

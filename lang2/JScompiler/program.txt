@@ -1,14 +1,92 @@
-vga_ram: (int*) VGA_ADDR
+#define MAX_MEMORY 100
+#define RETURN_FALSE 101
 
-ttyPosition: (int) 0
-BGcolor: (char) BLACK
-FGcolor: (char) WHITE
+# Let the compiler designate some static memory for us
+malloc_memory: (char*) (char:100)
+
+# Where our memory segments will start
+malloc_start: (int*) (int:100)
+
+# Where out memory segments will end 
+malloc_end: (int*) (int:100)
+
+# Where to write into the start/end  
+malloc_index: (int) 1
+
+# Most recent free memory spot     
+malloc_free_spot: (int) 0    
 
 goto main
-function formatVGA int (int bgColor, int fgColor, int character)
-    wholeColor: (int) evaluate(bgColor << 4 | fgColor)
-    return evaluate(wholeColor << 8 | character)
-end @funciton
+# --------------------------- FUNCTIONS ---------------------------------------
+function array_includes void (int AI_param_value)
+    AI_return: (int) RETURN_FALSE
+    AI_i: (int) 0
+    repeat(AI_i, MAX_MEMORY)
+        if(malloc_start[AI_i] == AI_param_value)
+            AI_return = AI_i
+            return
+        endif
+        ++ AI_i
+    end @repeat
+end @function
 
+function malloc int (int M_param_size)
+    M_position: (int) 0
+    M_free_bytes_read: (int) 0
+
+    repeat(M_position, MAX_MEMORY)
+        array_includes(M_position)
+
+        # if in a block
+        if(AI_return != RETURN_FALSE)
+            # jump out of the block
+            M_position = malloc_end[AI_return]
+            M_free_bytes_read = 0
+        elif(M_free_bytes_read == M_param_size)
+            # if im not in a block and the length is right
+            malloc_end[malloc_index] = M_position
+            malloc_start[malloc_index] = {M_position - M_param_size + 1}
+            ++ malloc_index
+            return {malloc_memory + M_position - M_param_size)}
+        endif
+        ++ M_free_bytes_read
+        ++ M_position
+    end @repeat
+    ++ malloc_index
+end @function
+
+function free void (int F_parameter_ptr)
+
+    F_baseAddress: (int) {F_parameter_ptr - malloc_memory + 1)}
+    array_includes(F_baseAddress)
+
+    F_i: (int) malloc_start[AI_return]
+    F_endValue: (int) malloc_end[AI_return]
+
+    repeat(F_i, F_endValue)
+        malloc_memory[F_i] = 0
+        ++ F_i
+    end @repeat
+
+    malloc_start[AI_return] = 0
+    malloc_end[AI_return] = 0
+end @function
+# ----------------------------- MAIN --------------------------------------
 main:
-vga_ram[ttyPosition] = formatVGA(BGcolor, FGcolor, 'A')
+#include libs/stdio.s
+arr1: (int*) malloc({4 x sizeof(int)})
+arr2: (int*) malloc({2 x sizeof(int)})
+
+printLn(%i, arr1)
+printLn(%i, arr2)
+
+free(arr1)
+
+printLn(%s, (char:?) "---Freed_arr1---")
+
+# The two arrays of size 2 can fit in the empty space of 4 created by the freed pointer
+arr3: (int*) malloc({2 x sizeof(int)}) 1
+arr4: (int*) malloc({2 x sizeof(int)})
+
+printLn(%i, arr3)
+printLn(%i, arr4)

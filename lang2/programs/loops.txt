@@ -1,3 +1,5 @@
+#include libs/stdio.s
+
 i: (int) 0
 
 # Unmarked loops, these are used when you don't need nesting

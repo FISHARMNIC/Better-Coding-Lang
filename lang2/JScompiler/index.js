@@ -33,6 +33,8 @@ var compares = {
     "!=": "jne",
 }
 
+var code
+
 var outConts = {
     header: `
 .intel_syntax
@@ -167,7 +169,7 @@ var formattedFunctions = {
         if (Number(value.join("")) == 0 && len > 10) {
             data_section_data.push(`${dynaLabel()}: .fill ${len}, ${typedefs[type][0]}`)
         } else {
-            console.log(!value[0], value[0])
+            //console.log(!value[0], value[0])
             data_section_data.push(
                 `${dynaLabel()}: `//${asmTypedefs[type]} ${value + "0".repeat(len - value.)}`
             )
@@ -185,7 +187,7 @@ var formattedFunctions = {
         )
         lineContents[wordNumber] = '_tempPointer'
         lineContents.splice(wordNumber + 1, 1)
-        console.log("---", lineContents)
+        //console.log("---", lineContents)
     },
     createLabel: function (name, type = "", value = "") {
         //console.log("$$$$", lineContents)
@@ -240,7 +242,7 @@ var formattedFunctions = {
         main_kernel_data.push(`new_line`)
     },
     arrayIndex: function (base, index) {
-        console.log("aI")
+        //console.log("aI")
         var tr = "_tempReg"
         var tb = "_tempBase"
 
@@ -377,10 +379,10 @@ var formattedFunctions = {
         lineContents[wordNumber + 1] = value
         wordContents = lineContents[wordNumber]
         nextWordContents = lineContents[wordNumber + 1]
-        console.log("***", wordContents)
+        //console.log("***", wordContents)
         manipulateBrackets()
         //wordNumber += 1
-        console.log("))))", lineContents)
+        //console.log("))))", lineContents)
     },
     if: function (v, cmp, v2) {
         main_kernel_data.push(
@@ -415,9 +417,9 @@ var formattedFunctions = {
         lineContents.splice(wordNumber + 1, 1)
     },
     repeat: function (vari, end, label) {
-        console.log("%%%", label)
+        //console.log("%%%", label)
         if (label == undefined) {
-            console.log("***", label)
+            //console.log("***", label)
             endRepBind.push([vari, end])
             main_kernel_data.push(
                 `${whileLabel()}:`
@@ -428,19 +430,19 @@ var formattedFunctions = {
         }
     },
     end: function (type) {
-        console.log("chode")
+        //console.log("chode")
         type += "."
         var parsedType = type.slice(0, type.indexOf("."))
         type = type.split("")
         type.pop()
         type = type.join("")
         var parsedType2 = type.slice(type.indexOf(".") + 1)
-        console.log(":::", parsedType, ":", type)
+        //console.log(":::", parsedType, ":", type)
         switch (parsedType) {
             case "@repeat":
                 var tPull = endRepBind.pop()
                 if (!type.includes(".")) {
-                    console.log("bye")
+                    //console.log("bye")
                     main_kernel_data.push(
                         `pusha`,
                         `mov %eax, ${tPull[0]}`,
@@ -450,7 +452,7 @@ var formattedFunctions = {
                         `jl ${whileLabel(1)}`,
                     )
                 } else {
-                    console.log("hi")
+                    //console.log("hi")
                     main_kernel_data.push(
                         `pusha`,
                         `mov %eax, ${tPull[0]}`,
@@ -522,18 +524,37 @@ var formattedFunctions = {
     },
     sizeof: function (type) {
         lineContents[wordNumber] = typedefs[type][0]
+        lineContents.splice(wordNumber + 1, 1)
     },
-    "#include": function(file) {
-        outConts.header += `\n.include "${file}"\n`
+    "#include": function (file) {
+        //console.log(file)
+        if (file.at(-1) == "s") {
+            outConts.header += `\n .include "${file}" \n`
+        } else {
+            code.splice(lineNumber + 1, 0, ...String(fs.readFileSync(`${file}`)).split("\n"))
+        }
+        //console.log(code)
+        //process.exit(0)
     },
-    "!!": function(vari) {
+    "!!": function (vari) {
         main_kernel_data.push(`not${opSuffix[variables[vari].type]} ${vari}`)
     },
-    "clearVGA": function() {
+    "clearVGA": function () {
         main_kernel_data.push(`call _clearVGA`)
     },
-    "call": function(label) {
+    "call": function (label) {
         main_kernel_data.push(`call ${label}`)
+    },
+    "printAddr": function (type, value, index) {
+        if (type == "s" || type == "%s") {
+            main_kernel_data.push(`put_string ${value}, ${index}`)
+        } else if (type == "i" || type == "%i") {
+            main_kernel_data.push(`put_int ${value}, ${index}`)
+        } else if (type == "c" || type == "%c") {
+            main_kernel_data.push(`put_char ${value}, ${index}`)
+        } else {
+            console.error("Error: Unkown type", type)
+        }
     }
     // END HERE !@#123 FIND SEARCH KEYWORD YUH
     // IF FUNCTIONS BROKEN BECAUSE I MOVED TO UNFORMATTED
@@ -542,14 +563,18 @@ var formattedFunctions = {
 var unformattedFunctions = {
     evaluate: function (code) {
         main_kernel_data.push(`push %eax`, `mov %eax, ${code[0]}`)// //${parseInt(code[0]) ? code[0] : code[0].includes("[") ? code[0] : `[${code[0]}]`}`) // init in eax
-        console.log("#####", code)
+        var evlen = code.findIndex((element, index) => element == "__END_EVALUATE__" && index > wordNumber)
+        
+        //lineContents.splice(wordNumber + evlen, 1)
+        code.splice(evlen, 1)
+        //console.log("LEN:", evlen, code)
         for (var itemNum = 1; itemNum < code.length - 1; itemNum += 2) { //go by ops
             var item = {
                 current: code[itemNum],
                 previous: code[itemNum - 1],//parseInt(code[itemNum - 1]) ? code[itemNum - 1] : `[${code[itemNum - 1]}]`,
                 next: code[itemNum + 1]//parseInt(code[itemNum + 1]) ? code[itemNum + 1] : `[${code[itemNum + 1]}]`
             }
-            console.log("#", item)
+            //console.log("#", item)
             main_kernel_data.push(...((inD) => {
                 switch (inD.current) {
                     case "+":
@@ -589,18 +614,18 @@ var unformattedFunctions = {
                         ]
                     case "<<":
                         return [
-                        `push %ecx`,
-                        `mov %cl, ${inD.next}`,
-                        `shl %eax, %cl`,
-                        `pop %ecx`,
-                    ]
+                            `push %ecx`,
+                            `mov %cl, ${inD.next}`,
+                            `shl %eax, %cl`,
+                            `pop %ecx`,
+                        ]
                     case ">>":
                         return [
-                        `push %ecx`,
-                        `mov %cl, ${inD.next}`,
-                        `shr %eax, %cl`,
-                        `pop %ecx`,
-                    ]
+                            `push %ecx`,
+                            `mov %cl, ${inD.next}`,
+                            `shr %eax, %cl`,
+                            `pop %ecx`,
+                        ]
                 }
             })(item))
 
@@ -609,8 +634,8 @@ var unformattedFunctions = {
         main_kernel_data.push(`mov _mathResult, %eax`, `pop %eax`)
 
         lineContents[wordNumber] = '_mathResult'
-        lineContents.splice(wordNumber + 1, code.length)
-        ////console.log("------", main_kernel_data)
+        //lineContents.splice(wordNumber + 1, evlen)
+        //console.log("------", lineContents)
     },
     "function": function (code) {
         var name = code[0]
@@ -624,7 +649,7 @@ var unformattedFunctions = {
             }
         })
 
-        console.log("###---##", type, parameters)
+        //console.log("###---##", type, parameters)
         main_kernel_data.push(
             `${name}:`
         )
@@ -634,7 +659,7 @@ var unformattedFunctions = {
                 function_returnType = type
                 eval(`
             this[name] = function (${parameters.join(",")}) {
-                console.log("123123", arguments)
+                //console.log("123123", arguments)
                 var pNames = ${"['" + parameters.join("','") + "']"}
 
                 main_kernel_data.push('push %eax')
@@ -676,7 +701,7 @@ var unformattedFunctions = {
 
 }
     ; (function main() {
-        var code = String(fs.readFileSync(String(process.argv[2]))).split("\n")
+        code = String(fs.readFileSync(String(process.argv[2]))).split("\n")
         for (lineNumber = 0; lineNumber < code.length; lineNumber++) {
             tbinding = undefined
             lineContents = manipulateLine(code[lineNumber])
@@ -684,7 +709,7 @@ var unformattedFunctions = {
 
             if (lineContents[0] == "for") {
                 formattedFunctions.forLoop(...lineContents.slice(1))
-                console.log("________", lineContents)
+                //console.log("________", lineContents)
             } else {
 
                 for (wordNumber = lineContents.length - 1; wordNumber >= 0; wordNumber--) {
@@ -706,10 +731,11 @@ var unformattedFunctions = {
 
                     else if (Object.keys(formattedFunctions).includes(wordContents)) {
                         var pArr = lineContents.slice(wordNumber + 1, wordNumber + 1 + formattedFunctions[wordContents].length)
-                        //console.log("huevos", pArr)
+                        console.log("exec:", `FUNCTION \x1b[32m${wordContents}\x1b[0m :: ARGS \x1b[34m${pArr}\x1b[0m `)
+
                         formattedFunctions[wordContents](...pArr)
                     } else if (Object.keys(unformattedFunctions).includes(wordContents)) {
-                        console.log("$$$", lineContents.slice(wordNumber + 1))
+                        //console.log("$$$", lineContents.slice(wordNumber + 1))
                         unformattedFunctions[wordContents](lineContents.slice(wordNumber + 1))
                     }
                 }
@@ -726,6 +752,8 @@ function manipulateLine(contents) {
     // contents = contents.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g)
     // }
     contents = contents.replace(/,/g, ' ')
+    contents = contents.replace(/{/g, 'evaluate ')
+    contents = contents.replace(/}/g, '(__END_EVALUATE__)')
     contents = contents.replace(/[\(\)]/g, ' ').split(" ").filter(x => x)//.join(" ");
     contents = contents.map(x => Object.keys(constants).includes(x) ? constants[x] : x)
     //console.log("AM", contents)
@@ -739,9 +767,9 @@ function manipulateBrackets() {
         var arr = wordContents.slice(0, wordContents.indexOf("["))
         var index = wordContents.slice(wordContents.indexOf("[") + 1, wordContents.indexOf("]"))
         lineContents[wordNumber] = `arrayIndex ${arr} ${index}`
-        console.log("@@@@", `arrayIndex ${arr} ${index}`)
+        //console.log("@@@@", `arrayIndex ${arr} ${index}`)
         formattedFunctions.arrayIndex(arr, index)
-    } 
+    }
 }
 
 function shellExec() {
