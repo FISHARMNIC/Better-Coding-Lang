@@ -1,7 +1,7 @@
 #define MAX_MEMORY 100
 #define RETURN_FALSE 101
 
-# Let the compiler designate some static memory for us
+# Let the compiler designate some memory for us
 malloc_memory: (char*) (char:100)
 
 # Where our memory segments will start
