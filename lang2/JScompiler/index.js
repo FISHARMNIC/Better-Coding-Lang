@@ -6,12 +6,13 @@ const { exec } = require("child_process");
 process.on('uncaughtException', err => {
     process.argv[3] = "debug"
     WriteFile()
-    console.log("\ndumped current file into kernel.s\n",err)
+    console.log("\ndumped current file into kernel.s\n", err)
 })
 
 var typedefs = { //CHECK
     char: [1], // SIZE, ALLIGNEMNT
     void: [1],
+    func: [1],
     long: [8],
     int: [4],
     u16: [8],
@@ -19,7 +20,7 @@ var typedefs = { //CHECK
 }
 
 var alltypes = [
-    "char", "char*", "int", "int*", "void", "void*", "long", "long*"
+    "char", "char*", "int", "int*", "void", "void*", "long", "long*", "func*"
 ]
 
 var in_function_name = 0;
@@ -27,13 +28,14 @@ var in_function_parameters = [];
 
 var asmTypedefs = {
     char: ".byte",
-    "char*":".int", //points to an int pos
+    "char*": ".int", //points to an int pos
     int: ".int",
-    "int*":".int",
+    "int*": ".int",
     long: ".long",
-    "long*":".long",
+    "long*": ".long",
     u16: ".long",
-    "void*":".long",
+    "void*": ".long",
+    "func*": ".long",
 }
 
 var opSuffix = {
@@ -228,7 +230,7 @@ var formattedFunctions = {
         } else {
             main_kernel_data.push(`${name}:`)
         }
-        if(isPointer) {data_section_data.push(".section .text")}
+        if (isPointer) { data_section_data.push(".section .text") }
     },
     "&": function (label) {
         main_kernel_data.push(
@@ -240,15 +242,30 @@ var formattedFunctions = {
         lineContents[wordNumber] = "_tempReg"
         lineContents.splice(wordNumber + 1, 1)
     },
-    "*": function (label) {
+    "f&": function (label) {
         main_kernel_data.push(
             `push %eax`,
-            `mov %eax, ${label}`,
-            `mov %eax, [%eax]`,
+            `lea %eax, ${label}`,
             `mov _tempReg, %eax`,
             `pop %eax`
         )
         lineContents[wordNumber] = "_tempReg"
+        lineContents.splice(wordNumber + 1, 1)
+    },
+    "*": function (label) {
+        console.log(variables, label)
+        if (variables[label].type == "func") {
+            lineContents[wordNumber] = `[${label}]`
+        } else {
+            main_kernel_data.push(
+                `push %eax`,
+                `mov %eax, ${label}`,
+                `mov %eax, [%eax]`,
+                `mov _tempReg, %eax`,
+                `pop %eax`
+            )
+            lineContents[wordNumber] = "_tempReg"
+        }
         lineContents.splice(wordNumber + 1, 1)
 
         //console.log("*", lineContents)
@@ -269,7 +286,7 @@ var formattedFunctions = {
         } else {
             TempRegUsed = true
         }
-        console.log("$",base, variables)
+        console.log("$", base, variables)
         main_kernel_data.push(
             `\npush %eax; push %ebx`,
             `mov %eax, ${typedefs[variables[base].type][0]}`,
@@ -287,7 +304,7 @@ var formattedFunctions = {
         //lineContents.splice(wordNumber + 1, 1)
         // NEED TO KNOW BLOCK SIZES
     },
-    print: function (type, value) {
+    printf: function (type, value) {
         var pf = ""
         switch (type) {
             case "%s":
@@ -307,7 +324,7 @@ var formattedFunctions = {
         )
     },
     printLn: function (type, value) {
-        this.print(type, value)
+        this.printf(type, value)
         main_kernel_data.push(
             "new_line"
         )
@@ -428,7 +445,7 @@ var formattedFunctions = {
         )
         this.if(v, cmp, v2)
     },
-    else: function() {
+    else: function () {
         main_kernel_data.push(
             `jmp ${ifTerm()}`,
             `${endifLabel(1)}:`,
@@ -440,7 +457,7 @@ var formattedFunctions = {
             `${endifLabel(1)}:`
         )
     },
-    symbol: function(name, value) {
+    symbol: function (name, value) {
         data_section_data.push(
             `${name} = ${value}`
         )
@@ -562,9 +579,9 @@ var formattedFunctions = {
     },
     "#include": function (file) {
         //console.log(file)
-        if(file[0] == "<" && file.at(-1) == ">") {
-        file = file.slice(1,-1)
-        file = "libs/" + file + ".s"
+        if (file[0] == "<" && file.at(-1) == ">") {
+            file = file.slice(1, -1)
+            file = "libs/" + file + ".s"
         }
         if (file.at(-1) == "s") {
             outConts.header += `\n .include "${file}" \n`
@@ -594,7 +611,7 @@ var formattedFunctions = {
             console.error("Error: Unkown type", type)
         }
     },
-    start: function(init) {
+    start: function (init) {
         main_kernel_data.push(`jmp ${init}`)
     }
     // END HERE !@#123 FIND SEARCH KEYWORD YUH
@@ -695,11 +712,11 @@ var unformattedFunctions = {
             }
             var isPointer = false;
             console.log(parameterTypes)
-            if(parameterTypes[i].includes("*")) {
+            if (parameterTypes[i].includes("*")) {
                 isPointer = true;
-                parameterTypes[i] = parameterTypes[i].slice(0,-1)
+                parameterTypes[i] = parameterTypes[i].slice(0, -1)
             }
-            variables[t_Name] = { type:parameterTypes[i], isPointer, binding: tbinding }
+            variables[t_Name] = { type: parameterTypes[i], isPointer, binding: tbinding }
         })
 
         //console.log("###---##", type, parameters)
@@ -718,9 +735,9 @@ var unformattedFunctions = {
 
                 main_kernel_data.push('push %eax')
                 pNames.forEach((x,ind) => {
-                    if(variables[\`__\${infname}\${x}__\`].isPointer) {
+                    if(variables[\`__\${infname}\${x}__\`].type == "func") {
                         main_kernel_data.push(
-                            \`mov %eax, \${arguments[0][ind]}\`,
+                            \`lea %eax, \${arguments[0][ind]}\`,
                             \`mov __\${infname}\${x}__, %eax\` 
                         )
                     } else {
@@ -759,7 +776,7 @@ var unformattedFunctions = {
             }
         }
     },
-    "sysMac": function(code) {
+    "sysMac": function (code) {
         var name = code[0]
         var rest = code.slice(1)
         main_kernel_data.push(`${name} ${rest.join(",")}`)
@@ -784,6 +801,7 @@ var unformattedFunctions = {
                     manipulateBrackets()
 
                     //console.log(Object.values(formattedFunctions))
+
                     if (wordContents.includes(":")) {
                         //IF IS VARIABLE?
 
@@ -803,6 +821,18 @@ var unformattedFunctions = {
                         //console.log("$$$", lineContents.slice(wordNumber + 1))
                         unformattedFunctions[wordContents](lineContents.slice(wordNumber + 1))
                     }
+
+                    if (wordContents[0] == "&") {
+                        console.log(wordContents)
+                        lineContents[wordNumber] = wordContents.substring(1)
+                    }
+                    // if (wordContents[0] == "*" && wordContents.length != 0) {
+                    //     console.log(wordContents)
+                    //     lineContents[wordNumber] = "*"
+                    //     lineContents.splice(wordNumber + 1, 0, wordContents.substring(1))
+                    //     console.log("out", lineContents)
+                    //     wordNumber += 2;
+                    // }
                 }
             }
         }
@@ -821,7 +851,7 @@ function manipulateLine(contents) {
     contents = contents.replace(/}/g, '(__END_EVALUATE__)')
     contents = contents.replace(/[\(\)]/g, ' ').split(" ").filter(x => x)//.join(" ");
     contents = contents.map(x => Object.keys(constants).includes(x) ? constants[x] : x)
-    if(in_function_name != 0) {contents = contents.map(x => in_function_parameters.includes(`__${x}__`) ? `__${in_function_name}${x}__` : x)}
+    if (in_function_name != 0) { contents = contents.map(x => in_function_parameters.includes(`__${x}__`) ? `__${in_function_name}${x}__` : x) }
     //console.log("AM", contents)
     if (contents[0] == "#") { contents = [] }
     //manipulate the line here
@@ -832,7 +862,7 @@ function manipulateBrackets() {
     if (wordContents.includes("[") && wordContents.includes("]")) {
         var arr = wordContents.slice(0, wordContents.indexOf("["))
         var index = wordContents.slice(wordContents.indexOf("[") + 1, wordContents.indexOf("]"))
-        if(in_function_name != 0 && in_function_parameters.includes(`__${arr}__`)) {
+        if (in_function_name != 0 && in_function_parameters.includes(`__${arr}__`)) {
             arr = `__${in_function_name}${arr}__`
         }
         lineContents[wordNumber] = `arrayIndex ${arr} ${index}`
