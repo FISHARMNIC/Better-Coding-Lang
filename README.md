@@ -88,7 +88,7 @@ See [here](https://github.com/FISHARMNIC/Better-Coding-Lang/tree/main/lang2/prog
 ## Math
 * All statements to be evaluates must be
 	* surrounded in `{...}`
-	* or `evaluate(...)`
+	* or `evaluate(...)` DEPRECATED
 * Supports: `+,-,x,/,>>,<<,|`
 	* Note, the times symbol must be an `x`
 
