@@ -1,8 +1,8 @@
 # Better-Coding-Lang
-to run:  
-`cd JScompiler`  
-`node index program.txt`
-Change `program.txt` to any file that you want to run from.  
+to run:   
+`cd lang2`
+`./compile.sh example.txt`
+Change `example.txt` to any file that you want to run from.  
 Place the file inside the same folder as the `index.js` file
 
 The code is compiled into GNU GAS assembly, and is ran standalone on a virtual machine.
@@ -60,9 +60,10 @@ See [here](https://github.com/FISHARMNIC/Better-Coding-Lang/tree/main/lang2/prog
 * loops
 	* `repeat(variable, end)` ... `end @repeat`
 		* Translates to `for(; variable < end;;) {...}`
-* if/elif/endif
+* if/elif//else/endif
 	* `if(a comp b)`
 	* `elif( a comp b)`
+	* `else`
 	* `endif()`
 
 ## Functions
@@ -71,7 +72,7 @@ See [here](https://github.com/FISHARMNIC/Better-Coding-Lang/tree/main/lang2/prog
 * `return <value>`
 * `end @function`
 * FUNCTION ARE AUTOEXECUTED
-	* To avoid this add a `goto main` before your functions
+	* To avoid this add a `start main` before your function definitions
 	* And then add a `main:` after your functions
 
 ## Pointers
