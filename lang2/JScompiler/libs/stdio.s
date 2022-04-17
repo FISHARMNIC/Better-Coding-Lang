@@ -87,9 +87,9 @@ KEYBOARD_PORT = = 0x60
 # ECX : CHARACTER REGISTER
 # EBX : INDEX REGISTER
 
-
 keyboard_out: .long 0
 
+_lineNumber: .long 0
 
 _vga_entry:
     # uses cl as the char register
@@ -124,7 +124,7 @@ _vga_entry:
     or %ch, WHITE # 15 is white, the foreground
     movw [%ebx + VGA_ADDR], %cx # writes the 16bit data into the memory address
     popa
-    inc_var _lineNumber
+    incw [_lineNumber]
 .endm
 
 

@@ -1,9 +1,5 @@
 .macro strcmp str1, str2, len
-    push %eax
-    push %ebx
-    push %ecx
-    push %edx
-    push %esi
+    pusha
     cld  # clear direction flag
 
     lea %eax, \str1
@@ -12,12 +8,7 @@
     
     call _strcmp_loop   
 
-
-    pop %esi
-    pop %edx
-    pop %ecx
-    pop %ebx
-    pop %eax
+   popa
 
 .endm
 

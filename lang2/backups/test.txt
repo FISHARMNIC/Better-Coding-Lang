@@ -1,0 +1,7 @@
+#include libs/stdio.s
+
+
+vga_ram: (int*) 753665
+vga_ram[0] = 123;
+# printLn(%i, & vga_ram)
+# printLn(%i, * 100)

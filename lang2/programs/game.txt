@@ -1,0 +1,51 @@
+#include libs/stdio.s
+#include libs/stdlib.txt
+
+characterX: int 40
+characterY: int 12
+pXY_ev: int 
+start main
+
+# -------------------- functions --------------------
+function clearXY void (int, xPos, int yPos)
+    pXY_ev = {yPos x 80 + xPos}
+    printAddr(%c, 0, pXY_ev)
+    printAddr(%c, 0, {pXY_ev + 1})
+    printAddr(%c, 0, {pXY_ev - 1})
+    printAddr(%c, 0, {pXY_ev + 80})
+    printAddr(%c, 0, {pXY_ev - 80})
+end @function
+
+
+function printXY void (int, xPos, int yPos)
+    pXY_ev = {yPos x 80 + xPos}
+    printAddr(%c, '+', pXY_ev)
+    printAddr(%c, '-', {pXY_ev + 1})
+    printAddr(%c, '-', {pXY_ev - 1})
+    printAddr(%c, '|', {pXY_ev + 80})
+    printAddr(%c, '|', {pXY_ev - 80})
+end @function
+
+function movementHandler
+    getKeyboardInput()
+    if(keyboard_out == KEY_LEFT)
+        -- characterX
+    elif(keyboard_out == KEY_UP)
+        -- characterY
+    elif(keyboard_out == KEY_RIGHT)
+        ++ characterX
+    elif(keyboard_out == KEY_DOWN)
+        ++ characterY
+    endif
+    printXY(characterX, characterY)
+end @function
+
+main:
+repeat(false, 1)
+
+    clearVGA()
+    movementHandler()
+    sleep(0.2)
+end @repeat
+
+printXY(10,10)

@@ -1,7 +1,9 @@
+#include libs/stdio.s
+
 #define MAX_MEMORY 100
 #define RETURN_FALSE 101
 
-# Let the compiler designate some memory for us
+# Let the compiler designate some static memory for us
 malloc_memory: (char*) (char:100)
 
 # Where our memory segments will start
@@ -45,9 +47,9 @@ function malloc int (int M_param_size)
         elif(M_free_bytes_read == M_param_size)
             # if im not in a block and the length is right
             malloc_end[malloc_index] = M_position
-            malloc_start[malloc_index] = evaluate(M_position - M_param_size + 1)
+            malloc_start[malloc_index] = {M_position - M_param_size + 1}
             ++ malloc_index
-            return evaluate(malloc_memory + M_position - M_param_size)
+            return {malloc_memory + M_position - M_param_size)}
         endif
         ++ M_free_bytes_read
         ++ M_position
@@ -57,12 +59,12 @@ end @function
 
 function free void (int F_parameter_ptr)
 
-    F_baseAddress: (int) evaluate(F_parameter_ptr - malloc_memory + 1) 
+    F_baseAddress: (int) {F_parameter_ptr - malloc_memory + 1}
     array_includes(F_baseAddress)
 
     F_i: (int) malloc_start[AI_return]
     F_endValue: (int) malloc_end[AI_return]
-
+    
     repeat(F_i, F_endValue)
         malloc_memory[F_i] = 0
         ++ F_i
@@ -74,8 +76,8 @@ end @function
 # ----------------------------- MAIN --------------------------------------
 main:
 
-arr1: (int*) malloc(evaluate(4 x sizeof(int))
-arr2: (int*) malloc(evaluate(2 x sizeof(int)))
+arr1: (int*) malloc({4 x sizeof(int)})
+arr2: (int*) malloc({2 x sizeof(int)})
 
 printLn(%i, arr1)
 printLn(%i, arr2)
@@ -85,8 +87,8 @@ free(arr1)
 printLn(%s, (char:?) "---Freed_arr1---")
 
 # The two arrays of size 2 can fit in the empty space of 4 created by the freed pointer
-arr3: (int*) malloc(evaluate(2 x sizeof(int))
-arr4: (int*) malloc(evaluate(2 x sizeof(int))
+arr3: (int*) malloc({2 x sizeof(int)}) 1
+arr4: (int*) malloc({2 x sizeof(int)})
 
 printLn(%i, arr3)
 printLn(%i, arr4)

@@ -1,0 +1,21 @@
+goto _strcmp_main_
+
+function strcmp int (char* str1, char* str2)
+    sc_i: (int) 0
+    repeat(sc_i, -1)
+        if(str1[sc_i] != str2[sc_i])
+            return 0
+        endif
+        if(str1[sc_i] != 0)
+        elif(str2[sc_i] == 0)
+            return 1
+        else
+            return 0
+        endif
+    end @repeat
+    return 1
+    
+end @function
+
+# ==================
+_strcmp_main_:

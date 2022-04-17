@@ -5,7 +5,7 @@
 # "*" gets the value of whats stored in that address
 # "jon: int" creates an integer pointer (integer variable)
 
-# Foo holds the value 123
+# Foo points to the value 123
 foo: (int) 123
 
 # You can also have a pointer to the variable, however it must be handled differently

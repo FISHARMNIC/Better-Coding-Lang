@@ -1,0 +1,26 @@
+#include libs/stdio/header.s
+
+_glc_: (int) 0
+
+goto main
+function put_string void (char* string)
+    _glc_ = 0
+    _ps_start_:
+    if(string[_glc_] == 0)
+        return
+    else
+        sysMac put_char string[_glc_]
+        ++ _glc_
+        goto _ps_start_
+    endif
+end @function
+
+function printf void (char* start, void* param1)
+    if(start[0] == 'c')
+        sysMac put_char 'N'
+    else
+        put_string(param1)
+    endif
+end @function
+
+main:

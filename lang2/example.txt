@@ -1,0 +1,10 @@
+# run "chmod u+x compile.sh" and then "./compile.sh example.txt"
+
+#include <stdio>
+#include <stdbool>
+
+i: int 0
+repeat(i, 10)
+    printAddr(%c, {i + 65}, i)
+    ++ i
+end @repeat

@@ -3,6 +3,12 @@
 const fs = require('fs')
 const { exec } = require("child_process");
 
+process.on('uncaughtException', err => {
+    process.argv[3] = "debug"
+    WriteFile()
+    console.log("\ndumped current file into kernel.s\n",err)
+})
+
 var typedefs = { //CHECK
     char: [1], // SIZE, ALLIGNEMNT
     void: [1],
@@ -12,11 +18,22 @@ var typedefs = { //CHECK
     u32: [16]
 }
 
+var alltypes = [
+    "char", "char*", "int", "int*", "void", "void*", "long", "long*"
+]
+
+var in_function_name = 0;
+var in_function_parameters = [];
+
 var asmTypedefs = {
     char: ".byte",
+    "char*":".int", //points to an int pos
     int: ".int",
+    "int*":".int",
     long: ".long",
-    u16: ".long"
+    "long*":".long",
+    u16: ".long",
+    "void*":".long",
 }
 
 var opSuffix = {
@@ -41,9 +58,7 @@ var outConts = {
 .org 0x100
 .global kernel_entry
 
-_lineNumber: .long 0
 _mathResult: .long 0
-_mathFloat: .float 0
 
 _tempReg: .long 0
 _tempBase: .long 0
@@ -61,14 +76,14 @@ _tempPointer: .long 0
 
 .section .text
 kernel_entry:
-    pusha
+    push %eax; push %edx
     mov %dx, 0x3D4
     mov %al, 0xA	 # disable cursor
     out %dx, %al
     inc %dx
     mov %al, 0x20 # disable cursor
     out %dx, %al
-    popa
+    pop %edx; pop %eax
 
 `,
     footer:
@@ -79,7 +94,6 @@ kernel_entry:
 
 var data_section_data = [];
 var main_kernel_data = [];
-var init_section_data = []
 var variables = {}
 
 var lineNumber;
@@ -93,7 +107,6 @@ var addBuffer = ""
 var endRepBind = [];
 
 var tbinding;
-var arrayIndexOGbase;
 
 var constants = {}
 var TempRegUsed = false
@@ -141,6 +154,7 @@ function ifTerm(am = 0) {
 
 var formattedFunctions = {
     allocate: function (typeSize, value) {
+        console.log("allocation:", typeSize, value)
         if (value == undefined) {
             value = '0'
         }
@@ -166,10 +180,10 @@ var formattedFunctions = {
             value = value.split("|")
         }
 
+        // string or buffer
         if (Number(value.join("")) == 0 && len > 10) {
             data_section_data.push(`${dynaLabel()}: .fill ${len}, ${typedefs[type][0]}`)
         } else {
-            //console.log(!value[0], value[0])
             data_section_data.push(
                 `${dynaLabel()}: `//${asmTypedefs[type]} ${value + "0".repeat(len - value.)}`
             )
@@ -190,11 +204,12 @@ var formattedFunctions = {
         //console.log("---", lineContents)
     },
     createLabel: function (name, type = "", value = "") {
-        //console.log("$$$$", lineContents)
+        console.log("new label:", name, type, value)
         var isPointer = false
         if (type.includes("*")) {
             type = type.slice(0, -1)
             isPointer = true
+            data_section_data.push(".section .bss")
         }
         if (type) {
             data_section_data.push(`${name}: .long 0`) //no matter what, we want to store the base pointer
@@ -213,6 +228,7 @@ var formattedFunctions = {
         } else {
             main_kernel_data.push(`${name}:`)
         }
+        if(isPointer) {data_section_data.push(".section .text")}
     },
     "&": function (label) {
         main_kernel_data.push(
@@ -246,15 +262,16 @@ var formattedFunctions = {
         var tr = "_tempReg"
         var tb = "_tempBase"
 
+        console.log("TR", TempRegUsed)
         if (TempRegUsed) {
             tr = "_tempReg_2"
             tb = "_tempBase_2"
         } else {
             TempRegUsed = true
         }
-        //console.log(base, variables)
+        console.log("$",base, variables)
         main_kernel_data.push(
-            `\npusha #TEST`,
+            `\npush %eax; push %ebx`,
             `mov %eax, ${typedefs[variables[base].type][0]}`,
             `mov %ebx, ${index}`,
             `mul %ebx`,
@@ -263,9 +280,9 @@ var formattedFunctions = {
             `mov ${tb}, %ebx`,
             `mov %ebx, [%ebx]`, // Remove to get base address
             `mov ${tr}, %ebx`,
-            `popa\n`
+            `pop %ebx; pop %eax\n`
         )
-        lineContents[wordNumber] = `_tempReg`
+        lineContents[wordNumber] = tr
         arrayIndexOGbase = base + (index * typedefs[variables[base].type][0])
         //lineContents.splice(wordNumber + 1, 1)
         // NEED TO KNOW BLOCK SIZES
@@ -305,16 +322,20 @@ var formattedFunctions = {
                 `inc${opSuffix[variables[variable].type]} ${variable}`,
             )
         }
+        lineContents[wordNumber] = variable
+        lineContents.splice(wordNumber + 1, 1)
     },
     "++*": function (variable) {
         main_kernel_data.push(
-            `pusha`,
+            `push %eax`,
             `mov %eax, ${variable}`,
             `mov %eax, [%eax]`,
             `inc %eax`,
             `mov ${variable}, %eax`,
-            `popa`
+            `pop %eax`
         )
+        lineContents[wordNumber] = variable
+        lineContents.splice(wordNumber + 1, 1)
     },
     "--": function (variable) {
         if (variables[variable].isPointer) {
@@ -326,16 +347,20 @@ var formattedFunctions = {
                 `dec${opSuffix[variables[variable].type]} ${variable}`,
             )
         }
+        lineContents[wordNumber] = variable
+        lineContents.splice(wordNumber + 1, 1)
     },
     "--*": function (variable) {
         main_kernel_data.push(
-            `pusha`,
+            `push %eax`,
             `mov %eax, ${variable}`,
             `mov %eax, [%eax]`,
             `inc %eax`,
             `mov ${variable}, %eax`,
-            `popa`
+            `pop %eax`
         )
+        lineContents[wordNumber] = variable
+        lineContents.splice(wordNumber + 1, 1)
     },
     setVar: function (vari, value) {
         //console.log("cock", vari, value, addBuffer, variables)
@@ -386,11 +411,11 @@ var formattedFunctions = {
     },
     if: function (v, cmp, v2) {
         main_kernel_data.push(
-            `pusha`,
+            `push %eax; push %ebx`,
             `mov %eax, ${v}`,
             `mov %ebx, ${v2}`,
             `cmp %eax, %ebx`,
-            `popa`,
+            `pop %ebx; pop %eax`,
             `${compares[cmp]} ${endifLabel(1)}`, //1
             `jmp ${endifLabel(-1)}`, // 0
             `${endifLabel(1)}:`,//1
@@ -403,10 +428,21 @@ var formattedFunctions = {
         )
         this.if(v, cmp, v2)
     },
+    else: function() {
+        main_kernel_data.push(
+            `jmp ${ifTerm()}`,
+            `${endifLabel(1)}:`,
+        )
+    },
     endif: function () {
         main_kernel_data.push(
             `${ifTerm(1)}:`,
             `${endifLabel(1)}:`
+        )
+    },
+    symbol: function(name, value) {
+        data_section_data.push(
+            `${name} = ${value}`
         )
     },
     strlen: function (base) {
@@ -444,24 +480,21 @@ var formattedFunctions = {
                 if (!type.includes(".")) {
                     //console.log("bye")
                     main_kernel_data.push(
-                        `pusha`,
+                        `push %eax; push %ebx`,
                         `mov %eax, ${tPull[0]}`,
                         `mov %ebx, ${tPull[1]}`,
                         `cmp %eax, %ebx`,
-                        `popa`,
+                        `pop %ebx; pop %eax`,
                         `jl ${whileLabel(1)}`,
                     )
                 } else {
                     //console.log("hi")
                     main_kernel_data.push(
-                        `pusha`,
+                        `push %eax; push %ebx`,
                         `mov %eax, ${tPull[0]}`,
                         `mov %ebx, ${tPull[1]}`,
                         `cmp %eax, %ebx`,
-                        `pushf`,
-                        // `inc${opSuffix[variables[endRepBind[0]].type]} ${endRepBind[0]}`,
-                        `popf`,
-                        `popa`,
+                        `pop %ebx; pop %eax`,
                         `jl ${parsedType2}`,
                     )
                 }
@@ -470,6 +503,7 @@ var formattedFunctions = {
                 main_kernel_data.push(
                     `ret`
                 )
+                in_function_name = 0;
                 break
         }
     },
@@ -528,6 +562,10 @@ var formattedFunctions = {
     },
     "#include": function (file) {
         //console.log(file)
+        if(file[0] == "<" && file.at(-1) == ">") {
+        file = file.slice(1,-1)
+        file = "libs/" + file + ".s"
+        }
         if (file.at(-1) == "s") {
             outConts.header += `\n .include "${file}" \n`
         } else {
@@ -555,6 +593,9 @@ var formattedFunctions = {
         } else {
             console.error("Error: Unkown type", type)
         }
+    },
+    start: function(init) {
+        main_kernel_data.push(`jmp ${init}`)
     }
     // END HERE !@#123 FIND SEARCH KEYWORD YUH
     // IF FUNCTIONS BROKEN BECAUSE I MOVED TO UNFORMATTED
@@ -563,9 +604,12 @@ var formattedFunctions = {
 var unformattedFunctions = {
     evaluate: function (code) {
         main_kernel_data.push(`push %eax`, `mov %eax, ${code[0]}`)// //${parseInt(code[0]) ? code[0] : code[0].includes("[") ? code[0] : `[${code[0]}]`}`) // init in eax
-        var evlen = code.findIndex((element, index) => element == "__END_EVALUATE__" && index > wordNumber)
-        
-        //lineContents.splice(wordNumber + evlen, 1)
+        var evlen = code.findIndex((element, index) => element == "__END_EVALUATE__")
+        var absFin = evlen + wordNumber
+        var absStart = wordNumber
+        var ac = [...lineContents]
+        ac.splice(absStart, absFin, "_mathResult")
+        //console.log("ends", lineContents, absStart, absFin, ac)
         code.splice(evlen, 1)
         //console.log("LEN:", evlen, code)
         for (var itemNum = 1; itemNum < code.length - 1; itemNum += 2) { //go by ops
@@ -633,20 +677,29 @@ var unformattedFunctions = {
 
         main_kernel_data.push(`mov _mathResult, %eax`, `pop %eax`)
 
-        lineContents[wordNumber] = '_mathResult'
+        lineContents = [...ac]
         //lineContents.splice(wordNumber + 1, evlen)
         //console.log("------", lineContents)
     },
     "function": function (code) {
         var name = code[0]
         var type = code[1]
-        var parameters = code.slice(2).filter(x => !Object.keys(typedefs).includes(x))
-        var parameterTypes = code.slice(2).filter(x => Object.keys(typedefs).includes(x))
-
+        var parameters = code.slice(2).filter(x => !alltypes.includes(x))
+        var parameterTypes = code.slice(2).filter(x => alltypes.includes(x))
+        in_function_name = name;
+        in_function_parameters = parameters.map(x => `__${x}__`);
         parameters.forEach((x, i) => {
+            var t_Name = `__${in_function_name}${x}__`
             if (!Object.keys(variables).includes(x)) {
-                data_section_data.push(`${x}: .${parameterTypes[i]} 0 `)
+                data_section_data.push(`__${in_function_name}${x}__: ${asmTypedefs[parameterTypes[i]]} 0 `)
             }
+            var isPointer = false;
+            console.log(parameterTypes)
+            if(parameterTypes[i].includes("*")) {
+                isPointer = true;
+                parameterTypes[i] = parameterTypes[i].slice(0,-1)
+            }
+            variables[t_Name] = { type:parameterTypes[i], isPointer, binding: tbinding }
         })
 
         //console.log("###---##", type, parameters)
@@ -659,15 +712,23 @@ var unformattedFunctions = {
                 function_returnType = type
                 eval(`
             this[name] = function (${parameters.join(",")}) {
+                var infname = "${in_function_name}"
                 //console.log("123123", arguments)
                 var pNames = ${"['" + parameters.join("','") + "']"}
 
                 main_kernel_data.push('push %eax')
                 pNames.forEach((x,ind) => {
-                    main_kernel_data.push(
-                        \`mov %eax, \${arguments[0][ind]}\`,
-                        \`mov \${x}, %eax\`
-                    )
+                    if(variables[\`__\${infname}\${x}__\`].isPointer) {
+                        main_kernel_data.push(
+                            \`mov %eax, \${arguments[0][ind]}\`,
+                            \`mov __\${infname}\${x}__, %eax\` 
+                        )
+                    } else {
+                        main_kernel_data.push(
+                            \`mov %eax, \${arguments[0][ind]}\`,
+                            \`mov __\${infname}\${x}__, %eax\`
+                        )
+                    }
                 })
 
                 main_kernel_data.push('pop %eax')
@@ -698,7 +759,11 @@ var unformattedFunctions = {
             }
         }
     },
-
+    "sysMac": function(code) {
+        var name = code[0]
+        var rest = code.slice(1)
+        main_kernel_data.push(`${name} ${rest.join(",")}`)
+    }
 }
     ; (function main() {
         code = String(fs.readFileSync(String(process.argv[2]))).split("\n")
@@ -756,6 +821,7 @@ function manipulateLine(contents) {
     contents = contents.replace(/}/g, '(__END_EVALUATE__)')
     contents = contents.replace(/[\(\)]/g, ' ').split(" ").filter(x => x)//.join(" ");
     contents = contents.map(x => Object.keys(constants).includes(x) ? constants[x] : x)
+    if(in_function_name != 0) {contents = contents.map(x => in_function_parameters.includes(`__${x}__`) ? `__${in_function_name}${x}__` : x)}
     //console.log("AM", contents)
     if (contents[0] == "#") { contents = [] }
     //manipulate the line here
@@ -766,6 +832,9 @@ function manipulateBrackets() {
     if (wordContents.includes("[") && wordContents.includes("]")) {
         var arr = wordContents.slice(0, wordContents.indexOf("["))
         var index = wordContents.slice(wordContents.indexOf("[") + 1, wordContents.indexOf("]"))
+        if(in_function_name != 0 && in_function_parameters.includes(`__${arr}__`)) {
+            arr = `__${in_function_name}${arr}__`
+        }
         lineContents[wordNumber] = `arrayIndex ${arr} ${index}`
         //console.log("@@@@", `arrayIndex ${arr} ${index}`)
         formattedFunctions.arrayIndex(arr, index)
@@ -786,6 +855,8 @@ function shellExec() {
         console.log(`stdout: ${stdout}`);
     })
 }
+
+
 
 function WriteFile() {
     //console.log("---exec---")

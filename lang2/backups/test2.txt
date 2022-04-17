@@ -1,0 +1,6 @@
+#include libs/stdio/stdio.txt
+
+test: (char*) (char:?) "hello"
+put_string(test)
+
+printf((char:?) "c", 'a')

@@ -1,0 +1,40 @@
+symbol VGA_ADDR 0xB8000
+symbol BLACK 0
+symbol WHITE 15
+symbol GLOBAL_PALETTE 15
+vga_ram: (char*) VGA_ADDR
+
+_glc_: (int) 0
+_ttyPosition: (int) 0
+
+BGcolor: (char) BLACK
+FGcolor: (char) WHITE
+
+goto main
+function formatVGA int (int bgColor, int fgColor, int character) 
+    return {bgColor << 4 | fgColor << 8 | character}
+end @function
+
+function put_char void (char mc) 
+    vga_ram[_ttyPosition] = formatVGA(BGcolor, FGcolor, mc)
+    ++ _ttyPosition
+    vga_ram[_ttyPosition] = GLOBAL_PALETTE
+    ++ _ttyPosition
+end @function
+
+function put_string void (char* str)
+    put_char(str[0])
+    put_char(str[1])
+    put_char(str[2])
+end @function
+
+
+
+main:
+put_char('A')
+put_char('B')
+
+test_string: (char*) (char:?) "abcdef"
+put_string(test_string)
+
+# vga_ram[ttyPosition] = formatVGA(BGcolor, FGcolor, 'A')

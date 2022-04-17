@@ -1,13 +1,13 @@
-vga_ram: (int*) VGA_ADDR
+vga_ram: (int*) 0xB8000
 
 ttyPosition: (int) 0
-BGcolor: (char) BLACK
-FGcolor: (char) WHITE
+BGcolor: (char) 0
+FGcolor: (char) 15
 
 goto main
 function formatVGA int (int bgColor, int fgColor, int character)
-    wholeColor: (int) evaluate(bgColor << 4 | fgColor)
-    return evaluate(wholeColor << 8 | character)
+    wholeColor: (int) {bgColor << 4 | fgColor}
+    return {wholeColor << 8 | character}
 end @funciton
 
 main:

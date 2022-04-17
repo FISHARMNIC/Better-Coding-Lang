@@ -1,15 +1,19 @@
-M_param_size = 4
-malloc()
-printLn(%i, M_return)
-malloc()
-printLn(%i, M_return)
+symbol VGA_ADDR 0xB8000
+symbol BLACK 0
+symbol WHITE 15
 
+vga_ram: (int*) VGA_ADDR
 
-print(%c,'N')
-        print(%i,M_position)
-        print(%c,':')
-        print(%i,malloc_start[M_position])
-        print(%c,':')
-        print(%i,malloc_end[M_position])
-        print(%c,':')
-        printLn(%i,AI_return)
+ttyPosition: (int) 0
+BGcolor: (char) BLACK
+FGcolor: (char) WHITE
+
+goto main
+function formatVGA int (int bgColor, int fgColor, int character)
+    wholeColor: (int) evaluate(bgColor << 4 | fgColor)
+    return evaluate(wholeColor << 8 | character)
+end @function
+
+main:
+0xB8000 = 242
+vga_ram[ttyPosition] = formatVGA(BGcolor, FGcolor, 'A')
