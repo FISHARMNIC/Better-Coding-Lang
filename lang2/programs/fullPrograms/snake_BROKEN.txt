@@ -1,0 +1,138 @@
+# BREAKS?
+
+gameover: (int) 0
+
+#define width 80
+#define height 25
+
+x: (int)
+y: (int)
+fruitX: (int)
+fruitY: (int)
+score: (int)
+
+tailX: (int*) (int:100)
+tailY: (int*) (int:100)
+
+nTail: (int)
+
+STOP: (int) 0
+LEFT: (int) 1
+RIGHT: (int) 2
+UP: (int) 3
+DOWN: (int) 4
+
+dir: (int)
+
+goto main
+// ------------------------------ FUNCTION ---------------------
+function Setup
+    gameover = 0
+    dir = STOP
+    x = evaluate(width / 2)
+    y = evaluate(height / 2)
+    fruitX = 15
+    fruitY = 15
+end @function
+
+function Input
+    getKeyboardInput()
+    if(keyboard_out == KEY_UP)
+        dir = UP
+    elif(keyboard_out == KEY_LEFT)
+        dir = LEFT
+    elif(keyboard_out == KEY_RIGHT)
+        dir = RIGHT
+    elif(keyboard_out == KEY_DOWN)
+        dir = DOWN
+    endif
+end @function
+
+function putPixel void (int PP_xpos, int PP_ypos)
+    printAddr(%c, 219, evaluate(PP_ypos x 80 + PP_xpos))
+end @function
+
+function Draw
+    clearVGA()
+    d_i: (int) 0
+    temp: (int) 0
+    repeat(d_i, 100)
+        temp = tailX[d_i]
+        putPixel(temp, tailY[d_i])
+        ++ d_i
+    end @repeat
+
+    putPixel(fruitX, fruitY)
+end @function
+
+function algorithm
+    prevX: (int) tailX[0]
+    prevY: (int) tailY[0]
+    
+    prev2X: (int)
+    prev2Y: (int)
+
+    tailX[0] = x
+    tailY[0] = y
+
+    i:(int) 1
+    repeat(i, nTail)
+        prev2X = tailX[i]
+        prev2Y = tailY[i]
+
+        tailX[i] = prevX
+        tailY[i] = prevY
+
+        prevX = prev2X
+        prevY = prev2Y
+        ++ i
+    end @repeat
+
+    if(dir == LEFT)
+        -- x
+    elif(dir == RIGHT)
+        ++ x
+    elif(dir == UP)
+        -- y
+    elif(dir == DOWN)
+        ++ y
+    endif
+
+    i = 0
+    repeat(i, nTail)
+        if(tailX[i] != x)
+        elif(tailY[i] == y)
+            gameover = 1
+        endif
+        ++ i 
+    end @repeat
+
+    if(x != fruitX)
+    elif(y == fruitY)
+        printLn(%c, 'A')
+        score = evaluate(score + 10)
+        # MOVE FRUIT
+        ++ nTail
+    endif
+
+end @function
+
+# ------------------------------------ MAIN --------------------
+main:
+    Setup()
+    n: (int) 0
+    repeat(n, 1)
+        if(gameover == 1)
+            goto fail
+        endif
+        Draw()
+        Input()
+        algorithm()
+        sleep(0.3)
+    end @repeat
+
+
+fail:
+    printLn(%s, (char:?) "fail")
+
+

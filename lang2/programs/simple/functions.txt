@@ -1,0 +1,12 @@
+#include <stdio>
+
+# Skip to the beginning of the program
+goto main
+
+function printHello
+    printLn(%s, (char:?) "hello")
+end @function
+
+main:
+
+printHello()

@@ -1,0 +1,13 @@
+#include <stdio>
+
+printLn(%s, (char:?) "press_A")
+
+i: (int) 0
+repeat(i,1)
+    getKeyboardInput()
+    if(keyboard_out == KEY_A)
+        printLn(%s, (char:?) "clicked!")
+        goto stop
+    endif
+end @repeat
+stop:

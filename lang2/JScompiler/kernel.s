@@ -14,22 +14,17 @@ _tempBase_2: .long 0
 _tempPointer: .long 0
 
 .include "./data.s"
-
- .include "libs/stdio.s" 
-__printWcallbackcb__: .long 0 
-_dyna_0: 
-.byte 'h'
-.byte 'e'
-.byte 'l'
-.byte 'l'
-.byte 'o'
-.byte 0
-_dyna_1: 
-.byte 'd'
-.byte 'o'
-.byte 'n'
-.byte 'e'
-.byte 0
+.section .bss
+vga_ram: .long 0
+.section .text
+ttyPosition: .long 0
+BGcolor: .long 0
+FGcolor: .long 0
+__formatVGAbgColor__: .int 0 
+__formatVGAfgColor__: .int 0 
+__formatVGAcharacter__: .int 0 
+wholeColor: .long 0
+__put_charcharacter__: .int 0 
 
 
 .section .text
@@ -43,28 +38,103 @@ kernel_entry:
     out %dx, %al
     pop %edx; pop %eax
 
+
+push %ebx
+mov %ebx, 0xB8000
+mov vga_ram, %ebx
+pop %ebx
+
+
+push %ebx
+mov %ebx, 0
+mov ttyPosition, %ebx
+pop %ebx
+
+
+push %ebx
+mov %ebx, 0
+mov BGcolor, %ebx
+pop %ebx
+
+
+push %ebx
+mov %ebx, 15
+mov FGcolor, %ebx
+pop %ebx
+
 jmp main
-printWcallback:
+formatVGA:
+push %eax
+mov %eax, __formatVGAbgColor__
+push %ecx
+mov %cl, 4
+shl %eax, %cl
+pop %ecx
 push %ebx
-lea %ebx, _dyna_0
-mov _tempPointer, %ebx
+mov %ebx, __formatVGAfgColor__
+or %eax, %ebx
 pop %ebx
-put_string _tempPointer
-new_line
-call [__printWcallbackcb__]
+mov _mathResult, %eax
+pop %eax
+
+push %ebx
+mov %ebx, _mathResult
+mov wholeColor, %ebx
+pop %ebx
+
+push %eax
+mov %eax, wholeColor
+push %ecx
+mov %cl, 8
+shl %eax, %cl
+pop %ecx
+push %ebx
+mov %ebx, __formatVGAcharacter__
+or %eax, %ebx
+pop %ebx
+mov _mathResult, %eax
+pop %eax
+push %eax
+mov %eax, _mathResult
+mov _return_int, %eax
+pop %eax
 ret
-myCallback:
+ret
+put_char:
+push %eax
+mov %eax, BGcolor
+mov __formatVGAbgColor__, %eax
+mov %eax, FGcolor
+mov __formatVGAfgColor__, %eax
+mov %eax, 'A'
+mov __formatVGAcharacter__, %eax
+pop %eax
+call formatVGA
+
+push %eax; push %ebx
+mov %eax, 4
+mov %ebx, ttyPosition
+mul %ebx
+mov %ebx, vga_ram
+add %ebx, %eax
+mov _tempBase, %ebx
+mov %ebx, [%ebx]
+mov _tempReg, %ebx
+pop %ebx; pop %eax
+
+push %eax
 push %ebx
-lea %ebx, _dyna_1
-mov _tempPointer, %ebx
+mov %eax, _return_int
+mov %ebx, _tempBase
+mov [%ebx], %eax
 pop %ebx
-put_string _tempPointer
-new_line
+pop %eax
+incw ttyPosition
 ret
 main:
 push %eax
-lea %eax, myCallback
-mov __printWcallbackcb__, %eax
+mov %eax, 'A'
+mov __put_charcharacter__, %eax
 pop %eax
-call printWcallback
+call put_char
    ret

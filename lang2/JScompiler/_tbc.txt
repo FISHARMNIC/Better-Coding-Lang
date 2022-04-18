@@ -1,16 +1,19 @@
-#include <stdio>
+vga_ram: (int*) 0xB8000
 
-start main
+ttyPosition: (int) 0
+BGcolor: (char) 0
+FGcolor: (char) 15
 
-function printWcallback void (func* cb)
-    printLn(%s, (char:?) "hello")
-    call * cb
+goto main
+function formatVGA int (int bgColor, int fgColor, int character)
+    wholeColor: (int) {bgColor << 4 | fgColor}
+    return {wholeColor << 8 | character}
 end @function
 
-function myCallback
-    printLn(%s, (char:?) "done")
+function put_char void (int character)
+    vga_ram[ttyPosition] = formatVGA(BGcolor, FGcolor, 'A')
+    ++ ttyPosition
 end @function
-
 main:
-    printWcallback(&myCallback)
 
+put_char('A')

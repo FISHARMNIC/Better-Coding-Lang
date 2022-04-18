@@ -1,0 +1,17 @@
+#include libs/stdio/stdio.s
+
+goto _stdio_start_
+
+# cannot compare char type for some reason?
+
+function betterPrint void (int format, void* data)
+    if(format == 'c')
+        sysmac put_char data
+    elif(format == 'i')
+        sysmac put_int data
+    elif(format == 's')
+        sysmac put_string data
+    endif
+end @function
+
+_stdio_start_:

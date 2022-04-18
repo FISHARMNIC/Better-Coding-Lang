@@ -1,0 +1,13 @@
+#include <stdio.s>
+
+# Normal math
+
+number: (int) 5
+number = {number + 3 x 10}
+printLn(%i, number)
+
+# Pointer math 
+
+number2: (int*) (int:1) 10
+number2 = {* number2 x 2 + 10}
+printLn(%i, * number2)

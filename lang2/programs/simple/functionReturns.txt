@@ -1,0 +1,15 @@
+#include <stdio.s>
+
+jon: (int) 123
+
+goto main
+
+# function <name> <return type> (<parameter type> <parameter name>...)
+function returnNumber int (int bob)
+    return bob
+end @function
+
+
+main:
+
+printLn(%i, returnNumber(123))

@@ -1,0 +1,16 @@
+#include <strings>
+#include <stdio>
+
+string1: (char*) (char:?) "hello"
+string2: (char*) (char:?) "adios"
+string3: (char*) (char:?) "chicken"
+
+# copies the value of each byte into another string
+# this means that the strings should be of equal length
+strcpy(string1,string2)
+printLn(%s, string1)
+
+# assigns the pointer of one string to the address of another
+# this allows the lengths to vary, but modifying a string will affect the other variable
+string1 *= string3
+printLn(%s, string1)

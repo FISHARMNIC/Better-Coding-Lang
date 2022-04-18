@@ -1,0 +1,14 @@
+#include libs/strings/strings.s
+
+goto _strings_s_main_
+
+function strcmp int (char* string1, char* string2, int len)
+    sysMac _strcmp(string1, string2, len)
+    return _strcmp_result
+end @function
+
+function strcpy void (char* string1, char* string2)
+    sysMac _strcpy(string1, string2)
+end @function
+
+_strings_s_main_:

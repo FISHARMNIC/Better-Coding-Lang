@@ -1,0 +1,19 @@
+vga_ram: (int*) 0xB8000
+
+ttyPosition: (int) 0
+BGcolor: (char) 0
+FGcolor: (char) 15
+
+goto main
+function formatVGA int (int bgColor, int fgColor, int character)
+    wholeColor: (int) {bgColor << 4 | fgColor}
+    return {wholeColor << 8 | character}
+end @function
+
+function put_char void (int character)
+    vga_ram[ttyPosition] = formatVGA(BGcolor, FGcolor, 'A')
+    ++ ttyPosition
+end @function
+main:
+
+put_char('A')

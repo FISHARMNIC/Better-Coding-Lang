@@ -1,0 +1,16 @@
+#include <stdio>
+
+start main
+
+function printWcallback void (func* cb)
+    printLn(%s, (char:?) "hello")
+    call * cb
+end @function
+
+function myCallback
+    printLn(%s, (char:?) "done")
+end @function
+
+main:
+    printWcallback(&myCallback)
+

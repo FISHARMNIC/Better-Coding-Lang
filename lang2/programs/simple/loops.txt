@@ -1,0 +1,16 @@
+#include <stdio>
+
+i: (int) 0
+
+# Unmarked loops, these are used when you don't need nesting
+repeat(i, 10)
+    printLn(%i, i)
+    ++ i
+end @repeat
+
+# Marked loops, these are needed if you are planning on nesting loops
+i = 65
+repeat(i, 75) (myLoop:)
+    printLn(%c, i)
+    ++ i 
+end @repeat.myLoop
