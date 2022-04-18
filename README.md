@@ -91,4 +91,6 @@ See [here](https://github.com/FISHARMNIC/Better-Coding-Lang/tree/main/lang2/prog
 	* or `evaluate(...)` DEPRECATED
 * Supports: `+,-,x,/,>>,<<,|`
 	* Note, the times symbol must be an `x`
+* Important
+	* The equation `x *= y` does *not* mean times-equal, instead it means `*x = y`
 
