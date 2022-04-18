@@ -78,10 +78,16 @@ See [here](https://github.com/FISHARMNIC/Better-Coding-Lang/tree/main/lang2/prog
 ## Pointers
 * `++* <var>` 
 	* Inc. value in pointer
-* `*`
+* `* <var>`
 	* Calls pointer
-* `&`
-	* base address of a variable
+* `& <var>`
+	* base address of a pointer
+* `&<var>`
+	* base address variable, function, label
+	* note the lack of a space inbetween
+* <pointer> *= <pointer>
+	* pointer = pointer
+	* *not* `x = x * y`
 * `<var>[<addr>]`
 	* index
 
@@ -92,5 +98,5 @@ See [here](https://github.com/FISHARMNIC/Better-Coding-Lang/tree/main/lang2/prog
 * Supports: `+,-,x,/,>>,<<,|`
 	* Note, the times symbol must be an `x`
 * Important
-	* The equation `x *= y` does *not* mean times-equal, instead it means `*x = y`
+	* The equation `x *= y` does *not* mean times-equal, instead it means `x = y`, where both varibales are pointers
 
