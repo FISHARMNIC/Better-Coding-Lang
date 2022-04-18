@@ -2,8 +2,8 @@
 
 #include <stdio>
 
-i: int 0
+i: (int) 0
 repeat(i, 10)
-    printAddr(%c, {i + 65}, i)
+    printf(%c, {i + 65})
     ++ i
 end @repeat

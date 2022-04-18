@@ -2,8 +2,8 @@
 
 gameover: (int) 0
 
-#define width 80
-#define height 25
+symbol width 80
+symbol height 25
 
 x: (int)
 y: (int)

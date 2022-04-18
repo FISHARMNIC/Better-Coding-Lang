@@ -4,10 +4,11 @@
 string1: (char*) (char:?) "hello"
 string2: (char*) (char:?) "hello"
 
-longstring: (char*) (char:100) "abc"
+longstring: (char*) (char:10) "abc"
 
 printLn(%i, strcmp(string1,string2))
 printLn(%i, strlen(string1))
 
+# not working
 strcat(longstring, string1, 4)
 printLn(%s, longstring)

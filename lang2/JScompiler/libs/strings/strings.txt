@@ -1,14 +1,47 @@
 #include libs/strings/strings.s
 
+_strings_iterator_: (int) 0
+_strings_iterator_2: (int) 0
+
 goto _strings_s_main_
 
-function strcmp int (char* string1, char* string2, int len)
-    sysMac _strcmp(string1, string2, len)
-    return _strcmp_result
+function strcmp int (char* str1, char* str2)
+    _strings_iterator_ = 0
+    repeat(_strings_iterator_, -1)
+        if(str1[_strings_iterator_] != str2[_strings_iterator_])
+            return 1
+        endif
+        if(str1[_strings_iterator_] != 0)
+        elif(str2[_strings_iterator_] == 0)
+            return 1
+        else
+            return 1
+        endif
+    end @repeat
+    return 0
 end @function
+
+function strlen int (char* string1)
+    _strings_iterator_ = 0
+    repeat(0, 1)
+        if(string1[_strings_iterator_] == 0)
+            return _strings_iterator_
+        endif
+        ++ _strings_iterator_
+    end @repeat
+end @function
+
 
 function strcpy void (char* string1, char* string2)
     sysMac _strcpy(string1, string2)
+end @function
+
+function strcat void (char* string1, char* string2, int amt)
+    _strings_iterator_ = {strlen(string1) - 2}
+    repeat(_strings_iterator_2 = 0, amt)
+        string1[_strings_iterator_] = string2[_strings_iterator_2]
+        ++ _strings_iterator_2
+    end @repeat
 end @function
 
 _strings_s_main_:

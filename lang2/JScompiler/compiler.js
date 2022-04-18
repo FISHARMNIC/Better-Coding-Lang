@@ -256,9 +256,9 @@ var formattedFunctions = {
     "*": function (label) {
         console.log(variables, label)
         var ist = false
-        try{
+        try {
             ist = variables[label].type == "func"
-        } catch(e) {}
+        } catch (e) { }
 
         if (ist) {
             lineContents[wordNumber] = `[${label}]`
@@ -411,6 +411,8 @@ var formattedFunctions = {
                 `pop %eax`
             )
         }
+        lineContents[wordNumber] = vari
+        lineContents.splice(wordNumber + 1, 2)
     },
     "=": function (value) {
         variexport = lineContents[wordNumber - 1]
@@ -469,13 +471,6 @@ var formattedFunctions = {
         data_section_data.push(
             `${name} = ${value}`
         )
-    },
-    strlen: function (base) {
-        main_kernel_data.push(
-            `strlen ${base}`
-        )
-        lineContents[wordNumber] = "_function_return"
-        lineContents.splice(wordNumber + 1, 1)
     },
     repeat: function (vari, end, label) {
         //console.log("%%%", label)
@@ -721,7 +716,7 @@ var unformattedFunctions = {
                 data_section_data.push(`__${in_function_name}${x}__: ${asmTypedefs[parameterTypes[i]]} 0 `)
             }
             var isPointer = false;
-            console.log(parameterTypes)
+            console.log(code, parameters, code.slice(1))
             if (parameterTypes[i].includes("*")) {
                 isPointer = true;
                 parameterTypes[i] = parameterTypes[i].slice(0, -1)
@@ -761,6 +756,8 @@ var unformattedFunctions = {
                 main_kernel_data.push('pop %eax')
                 main_kernel_data.push(\`call \${name}\`)
                 lineContents[wordNumber] = \`_return_${type}\`
+                lineContents.splice(wordNumber + 1, ${parameters.length})
+                //console.log("@@@", lineContents)
             }`)
             } else {
                 eval(`
@@ -836,7 +833,7 @@ var unformattedFunctions = {
                     }
 
                     if (wordContents[0] == "&") {
-                        console.log(wordContents)
+                        //console.log(wordContents)
                         lineContents[wordNumber] = wordContents.substring(1)
                     }
 
