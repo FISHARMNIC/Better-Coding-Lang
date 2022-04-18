@@ -1,8 +1,0 @@
-jon: (int*) (int:3) 1|2|3
-bob: (int*) (int:3) 4|5|6
-
-printLn(%i, bob[1])
-
-arrcpy(bob[1], jon[1])
-
-printLn(%i, bob[1])
