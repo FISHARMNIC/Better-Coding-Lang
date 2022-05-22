@@ -65,6 +65,8 @@ See [here](https://github.com/FISHARMNIC/Better-Coding-Lang/tree/main/lang2/prog
 	* `elif( a comp b)`
 	* `else`
 	* `endif()`
+		* Only should be used at the end of the entire conditional
+		* Ex. `if`...`elif`...`else`...`endif()`
 
 ## Functions
 * `function <name> <return type> (<parameter type> <parameter name>...)`
