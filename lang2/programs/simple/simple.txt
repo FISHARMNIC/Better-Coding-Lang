@@ -1,11 +1,11 @@
 #include <stdio.s>
 
-# "(int:1) 123" mallocs one block of data with the value of "123"
+# "(int:1) 123" allocates one block of data with the value of "123"
 # It then returns the address of that block
 # "*" gets the value of whats stored in that address
 # "jon: int" creates an integer pointer (integer variable)
 
-# Foo points to the value 123
+# Foo holds to the value 123
 foo: (int) 123
 
 # You can also have a pointer to the variable, however it must be handled differently
