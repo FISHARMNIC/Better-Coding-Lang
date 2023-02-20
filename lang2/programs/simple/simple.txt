@@ -11,7 +11,7 @@ foo: (int) 123
 # You can also have a pointer to the variable, however it must be handled differently
 fooTwo: (int*) (int:1) 123
 
-# Lastly, you can point to a variable, but there isn't any need for this
+# Lastly, you read the value from an allocated block
 fooThree: (int) * (int:1) 123
 
 # Bob contains the base addres of our array (of 5 items)
